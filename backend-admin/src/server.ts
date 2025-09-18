@@ -63,6 +63,11 @@ app.use(cors({
         return callback(null, true);
       }
 
+      // Allow production domain
+      if (host === 'booking.airportshuttletpa.com') {
+        return callback(null, true);
+      }
+
       console.log(`CORS blocked origin: ${origin} (host: ${host}, port: ${port})`);
       return callback(new Error('Not allowed by CORS'));
     } catch (error) {
