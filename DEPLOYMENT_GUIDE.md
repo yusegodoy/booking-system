@@ -26,8 +26,10 @@ Sistema de reservas de transporte con:
 - **Puerto**: 3000
 - **Variables de entorno necesarias**:
   ```
-  REACT_APP_API_BASE_URL=https://tu-backend-url.railway.app/api
+  REACT_APP_API_BASE_URL=https://api.booking.airportshuttletpa.com/api
   REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyCt4x1Zu_Cgtfdu8Tst65C871kVabm4ZCk
+  PORT=3000
+  NODE_ENV=production
   ```
 
 ## 🌐 Configuración de Dominio
