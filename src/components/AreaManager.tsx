@@ -17,8 +17,14 @@ const AreaManager: React.FC = () => {
   const [editingArea, setEditingArea] = useState<Area | null>(null);
 
   const fetchAreas = async () => {
-    const res = await axios.get<Area[]>('/api/areas');
-    setAreas(res.data);
+    try {
+      const res = await axios.get<Area[]>('/api/areas');
+      // Ensure we always set an array, even if the response is not an array
+      setAreas(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error('Error fetching areas:', error);
+      setAreas([]);
+    }
   };
 
   useEffect(() => {
@@ -78,7 +84,7 @@ const AreaManager: React.FC = () => {
         />
       )}
 
-      {areas.length === 0 ? (
+      {!Array.isArray(areas) || areas.length === 0 ? (
         <p className="no-data">No areas configured. Create your first area to get started.</p>
       ) : (
         <div className="areas-table-container">
