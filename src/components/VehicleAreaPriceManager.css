@@ -1,0 +1,156 @@
+.vehicle-area-price-manager {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.vehicle-selector {
+  margin-bottom: 20px;
+}
+
+.vehicle-selector label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.vehicle-selector select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+}
+
+.vehicle-selector select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.price-configuration {
+  margin-top: 20px;
+}
+
+.info-text {
+  background: #f0f8ff;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  color: #0066cc;
+  border-left: 4px solid #007bff;
+}
+
+.areas-grid {
+  display: grid;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.area-price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.area-price-item:hover {
+  border-color: #007bff;
+  background: #f8f9ff;
+}
+
+.area-info {
+  flex: 1;
+}
+
+.area-info strong {
+  color: #333;
+  font-size: 14px;
+}
+
+.price-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.price-input label {
+  font-weight: bold;
+  white-space: nowrap;
+  color: #333;
+  font-size: 14px;
+}
+
+.price-input input {
+  width: 120px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: right;
+  font-size: 14px;
+  background: white;
+  color: #333;
+}
+
+.price-input input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.actions {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.save-button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.save-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .area-price-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .price-input {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .price-input input {
+    width: 100px;
+  }
+} 

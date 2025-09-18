@@ -1,0 +1,51 @@
+.area-manager {
+  padding: 20px;
+}
+
+.area-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.area-manager-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.area-type-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.area-type-badge.city {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.area-type-badge.zipcode {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.area-type-badge.polygon {
+  background: #e8f5e8;
+  color: #388e3c;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+.areas-table-container {
+  overflow-x: auto;
+} 

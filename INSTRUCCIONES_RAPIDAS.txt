@@ -1,0 +1,36 @@
+🚀 BOOKING SYSTEM - INSTRUCCIONES RÁPIDAS
+============================================
+
+📋 REQUISITOS:
+- Node.js instalado
+- MongoDB ejecutándose
+- Navegador web
+
+🚀 PARA INICIAR LA APLICACIÓN:
+1. Asegúrate de que MongoDB esté ejecutándose
+2. Doble clic en "START_APP.bat"
+3. Espera a que se abra el navegador
+4. Inicia sesión con: admin@example.com
+
+🛑 PARA DETENER LA APLICACIÓN:
+1. Doble clic en "STOP_APP.bat"
+2. O cierra las ventanas de terminal
+
+🔧 PRIMERA VEZ (Configuración):
+1. Doble clic en "setup-app.bat"
+2. Sigue las instrucciones en pantalla
+
+📱 ACCESO:
+- URL: http://localhost:3000
+- Usuario: admin@example.com
+- Contraseña: (la que configuraste)
+
+❓ PROBLEMAS COMUNES:
+- Si MongoDB no conecta: Abre MongoDB Compass
+- Si los puertos están ocupados: Usa STOP_APP.bat y vuelve a intentar
+- Si hay errores: Ejecuta setup-app.bat
+
+📖 MÁS INFORMACIÓN:
+Lee "WEB_APP_README.md" para instrucciones detalladas
+
+�� ¡LISTO PARA USAR!

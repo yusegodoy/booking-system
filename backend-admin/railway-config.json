@@ -1,0 +1,25 @@
+{
+  "name": "airportshuttletpa-backend",
+  "description": "Backend API para sistema de reservas de transporte aeroportuario",
+  "version": "1.0.0",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node start-railway.js",
+    "build": "npm run build:ts && npm run build:js",
+    "build:ts": "tsc",
+    "build:js": "echo 'Build completed'",
+    "dev": "nodemon src/server.ts",
+    "test": "echo 'No tests specified'",
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "railway": {
+    "buildCommand": "npm run build",
+    "startCommand": "npm start",
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 100
+  }
+}

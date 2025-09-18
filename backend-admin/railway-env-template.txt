@@ -1,0 +1,28 @@
+# VARIABLES DE ENTORNO PARA RAILWAY
+# Copia estas variables en el panel de Railway
+
+# Base de datos MongoDB (Railway te dará una URI automáticamente)
+MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa
+
+# JWT Secret (generar uno nuevo para producción)
+JWT_SECRET=airportshuttletpa-jwt-secret-2024-super-seguro-railway
+
+# Configuración de CORS (tu dominio)
+CORS_ORIGIN=https://airportshuttletpa.com
+
+# Puerto (Railway lo maneja automáticamente)
+PORT=5001
+
+# Configuración de Google Calendar
+GOOGLE_CLIENT_ID=tu-google-client-id-aqui
+GOOGLE_CLIENT_SECRET=tu-google-client-secret-aqui
+GOOGLE_REDIRECT_URI=https://airportshuttletpa.com/auth/google/callback
+
+# Configuración de email (usar tu email de Ionos)
+EMAIL_HOST=smtp.ionos.com
+EMAIL_PORT=587
+EMAIL_USER=info@airportshuttletpa.com
+EMAIL_PASS=tu-password-email-aqui
+
+# Configuración de Node.js
+NODE_ENV=production

@@ -1,0 +1,186 @@
+.customer-autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.autocomplete-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.autocomplete-input.field-error {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+.autocomplete-loading {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s ease;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+  background-color: #f8f9ff;
+}
+
+.suggestion-main {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.suggestion-details {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #666;
+}
+
+.suggestion-email,
+.suggestion-phone {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.suggestion-email::before {
+  content: "📧";
+  font-size: 10px;
+}
+
+.suggestion-phone::before {
+  content: "📞";
+  font-size: 10px;
+}
+
+.highlight {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+
+.autocomplete-no-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbar styling for suggestions */
+.autocomplete-suggestions::-webkit-scrollbar {
+  width: 6px;
+}
+
+.autocomplete-suggestions::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.autocomplete-suggestions::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.autocomplete-suggestions::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .autocomplete-suggestions {
+    max-height: 250px;
+  }
+  
+  .suggestion-item {
+    padding: 10px 12px;
+  }
+  
+  .suggestion-main {
+    font-size: 13px;
+  }
+  
+  .suggestion-details {
+    font-size: 11px;
+    gap: 12px;
+  }
+}
