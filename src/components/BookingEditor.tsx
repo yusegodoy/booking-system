@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useLoadScript, Autocomplete } from '@react-google-maps/api';
-import { GOOGLE_MAPS_API_KEY } from '../config/constants';
+import { Autocomplete } from '@react-google-maps/api';
+import { useGoogleMaps } from '../contexts/GoogleMapsContext';
 import { useGlobalRouteCalculation } from '../hooks/useGlobalRouteCalculation';
 import CustomerAutocomplete from './CustomerAutocomplete';
 import './BookingEditor.css';
@@ -22,6 +22,7 @@ interface BookingEditorProps {
   onClose: () => void;
   onDelete?: () => void; // New prop for handling booking deletion
   isCreating?: boolean; // New prop to indicate if we're creating a new booking
+  token?: string; // Admin token for authenticated requests
 }
 
 interface FormData {
@@ -119,13 +120,9 @@ interface FormData {
   customerId?: string; // Optional customer ID
 }
 
-const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel, onClose, onDelete, isCreating = false }) => {
+const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel, onClose, onDelete, isCreating = false, token }) => {
   // Google Maps setup for autocomplete
-  const libraries: ("places")[] = ["places"];
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   // Global route calculation hook
   const { routeInfo, isCalculating, calculateRoute, clearRoute } = useGlobalRouteCalculation();
@@ -191,9 +188,16 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
   const loadVehicles = async () => {
     setVehiclesLoading(true);
     try {
+      const authToken = token || localStorage.getItem('adminToken') || localStorage.getItem('token');
+      if (!authToken) {
+        console.warn('No token available for loading vehicles');
+        setVehicles([]);
+        return;
+      }
+
       const response = await fetch('/api/vehicles', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('token')}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       if (response.ok) {
@@ -208,9 +212,11 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
         })));
       } else {
         console.error('Error loading vehicles:', response.status);
+        setVehicles([]);
       }
     } catch (error) {
       console.error('Error loading vehicles:', error);
+      setVehicles([]);
     } finally {
       setVehiclesLoading(false);
     }
@@ -220,9 +226,16 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
   const loadDrivers = async () => {
     setDriversLoading(true);
     try {
+      const authToken = token || localStorage.getItem('adminToken') || localStorage.getItem('token');
+      if (!authToken) {
+        console.warn('No token available for loading drivers');
+        setDrivers([]);
+        return;
+      }
+
       const response = await fetch('/api/drivers', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('token')}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       if (response.ok) {
@@ -232,9 +245,11 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
         console.log('Drivers loaded:', driversData);
       } else {
         console.error('Error loading drivers:', response.status);
+        setDrivers([]);
       }
     } catch (error) {
       console.error('Error loading drivers:', error);
+      setDrivers([]);
     } finally {
       setDriversLoading(false);
     }

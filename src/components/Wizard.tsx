@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
+import { Autocomplete } from '@react-google-maps/api';
 import AuthForm from './AuthForm';
 import ConfirmationPopup from './ConfirmationPopup';
-import { GOOGLE_MAPS_API_KEY, DEFAULT_MAP_CENTER, GOOGLE_MAPS_CONFIG } from '../config/constants';
+import { DEFAULT_MAP_CENTER, GOOGLE_MAPS_CONFIG } from '../config/constants';
+import { useGoogleMaps } from '../contexts/GoogleMapsContext';
 import { useGlobalRouteCalculation } from '../hooks/useGlobalRouteCalculation';
 
 interface WizardProps {
@@ -193,10 +194,7 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
   // Evitar que el click en el menú lo cierre
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
   // Estados locales que no necesitan ser preservados
   const [tripTouched, setTripTouched] = useState<{[key:string]: boolean}>({});
   const [tripError, setTripError] = useState('');

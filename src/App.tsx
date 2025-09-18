@@ -7,6 +7,7 @@ import Wizard from './components/Wizard';
 import AdminPortal from './components/AdminPortal';
 
 import { RouteCalculationProvider } from './contexts/RouteCalculationContext';
+import { GoogleMapsProvider } from './contexts/GoogleMapsContext';
 
 // Remove TripInfo and UserData interfaces
 
@@ -85,8 +86,9 @@ function App() {
 
   // Wizard is always the main render by default
   return (
-    <RouteCalculationProvider>
-      <>
+    <GoogleMapsProvider>
+      <RouteCalculationProvider>
+        <>
       {showAdminPortal ? (
         <AdminPortal onBackToMain={goToWizard} />
       ) : (
@@ -282,8 +284,9 @@ function App() {
           </div>
         </div>
       )}
-      </>
-    </RouteCalculationProvider>
+        </>
+      </RouteCalculationProvider>
+    </GoogleMapsProvider>
   );
 }
 

@@ -1240,6 +1240,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
         {showBookingEditor && (
           <BookingEditor
             booking={selectedBooking}
+            token={token}
           onSave={async (booking) => {
             if (selectedBooking) {
               // Update existing booking

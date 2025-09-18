@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap } from '@react-google-maps/api';
+import { useGoogleMaps } from '../contexts/GoogleMapsContext';
 
 interface Props {
   onPolygonComplete: (polygon: Array<{ lat: number; lng: number }>) => void;
@@ -12,10 +13,7 @@ const AreaPolygonEditor: React.FC<Props> = ({
   initialPolygon = null,
   disabled = false 
 }) => {
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: 'AIzaSyCt4x1Zu_Cgtfdu8Tst65C871kVabm4ZCk',
-    libraries: ['places', 'drawing'],
-  });
+  const { isLoaded, loadError } = useGoogleMaps();
 
   const mapRef = useRef<google.maps.Map | null>(null);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
