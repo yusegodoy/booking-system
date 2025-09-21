@@ -49,7 +49,7 @@ En el panel de Railway, ve a "Variables" y agrega:
 
 ```
 MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa
-JWT_SECRET=airportshuttletpa-jwt-secret-2024-super-seguro
+JWT_SECRET=your-super-secure-jwt-secret-here
 GOOGLE_CLIENT_ID=tu-google-client-id-aqui
 GOOGLE_CLIENT_SECRET=tu-google-client-secret-aqui
 CORS_ORIGIN=https://airportshuttletpa.com

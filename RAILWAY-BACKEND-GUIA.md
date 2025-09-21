@@ -57,7 +57,7 @@
 
 ```
 MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa
-JWT_SECRET=airportshuttletpa-jwt-secret-2024-super-seguro-railway
+JWT_SECRET=your-super-secure-jwt-secret-here
 CORS_ORIGIN=https://airportshuttletpa.com
 PORT=5001
 NODE_ENV=production

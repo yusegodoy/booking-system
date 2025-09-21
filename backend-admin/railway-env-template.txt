@@ -5,7 +5,7 @@
 MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa
 
 # JWT Secret (generar uno nuevo para producción)
-JWT_SECRET=airportshuttletpa-jwt-secret-2024-super-seguro-railway
+JWT_SECRET=your-super-secure-jwt-secret-here
 
 # Configuración de CORS (tu dominio)
 CORS_ORIGIN=https://airportshuttletpa.com

@@ -10,7 +10,7 @@ echo ⚙️ Configurando backend con datos reales...
 if not exist backend-admin\.env (
     echo # Configuración para desarrollo local (usando datos reales) > backend-admin\.env
     echo MONGODB_URI=mongodb://localhost:27017/booking-admin >> backend-admin\.env
-    echo JWT_SECRET=airportshuttletpa-jwt-secret-2024-local-development >> backend-admin\.env
+    echo JWT_SECRET=your-local-jwt-secret-here >> backend-admin\.env
     echo JWT_EXPIRES_IN=24h >> backend-admin\.env
     echo PORT=5001 >> backend-admin\.env
     echo NODE_ENV=development >> backend-admin\.env
@@ -36,7 +36,7 @@ echo.
 echo ⚙️ Configurando frontend...
 if not exist .env (
     echo REACT_APP_API_BASE_URL=http://localhost:5001/api > .env
-    echo REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyCt4x1Zu_Cgtfdu8Tst65C871kVabm4ZCk >> .env
+    echo REACT_APP_GOOGLE_MAPS_API_KEY=your-google-maps-api-key-here >> .env
     echo ✅ Archivo .env creado en frontend
 ) else (
     echo ℹ️ El archivo .env ya existe en frontend

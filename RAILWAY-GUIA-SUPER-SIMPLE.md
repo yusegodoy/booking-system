@@ -74,7 +74,7 @@ Hacer clic en "New Variable" y agregar:
 
 **Variable 2:**
 - Name: `JWT_SECRET`
-- Value: `airportshuttletpa-jwt-secret-2024-super-seguro-railway`
+- Value: `your-super-secure-jwt-secret-here`
 
 **Variable 3:**
 - Name: `CORS_ORIGIN`

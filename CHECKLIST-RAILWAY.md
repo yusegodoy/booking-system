@@ -42,7 +42,7 @@
 ## 🎯 PASO 4: CONFIGURAR VARIABLES
 - [ ] Ir a pestaña "Variables"
 - [ ] Agregar variable: `MONGODB_URI` = `mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa`
-- [ ] Agregar variable: `JWT_SECRET` = `airportshuttletpa-jwt-secret-2024-super-seguro-railway`
+- [ ] Agregar variable: `JWT_SECRET` = `your-super-secure-jwt-secret-here`
 - [ ] Agregar variable: `CORS_ORIGIN` = `https://airportshuttletpa.com`
 - [ ] Agregar variable: `PORT` = `5001`
 - [ ] Agregar variable: `NODE_ENV` = `production`
