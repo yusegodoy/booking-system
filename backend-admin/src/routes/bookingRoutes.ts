@@ -17,7 +17,14 @@ import { validateBookingId, validateBookingStatus, validatePagination } from '..
 
 const router = express.Router();
 
-// All routes require authentication
+// Public routes (no authentication required)
+// Get next available confirmation number
+router.get('/next-confirmation-number', getNextConfirmationNumber);
+
+// Crear una nueva reserva (public endpoint for customers)
+router.post('/', createBooking);
+
+// All other routes require authentication
 router.use(auth);
 
 // Get all bookings with pagination and filtering
@@ -25,12 +32,6 @@ router.get('/', validatePagination, getAllBookings);
 
 // Get booking statistics
 router.get('/stats', getBookingStats);
-
-// Get next available confirmation number
-router.get('/next-confirmation-number', getNextConfirmationNumber);
-
-// Crear una nueva reserva
-router.post('/', createBooking);
 
 // Get deleted bookings (trash)
 router.get('/trash/list', getDeletedBookings);

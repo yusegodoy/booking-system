@@ -734,14 +734,12 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
   // Función para generar números únicos y consecutivos para cada tramo
   const generateUniqueConfirmationNumbers = async () => {
     try {
-      // Obtener el siguiente número disponible del backend
-      const token = localStorage.getItem('adminToken');
+      // Obtener el siguiente número disponible del backend (public endpoint)
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
       const response = await fetch(`${API_BASE_URL}/bookings/next-confirmation-number`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       });
 
@@ -1035,13 +1033,12 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
     console.log('Creating booking with validated data:', booking);
 
     try {
-      const token = localStorage.getItem('adminToken');
+      // Create booking using public endpoint (no authentication required)
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
       const response = await fetch(`${API_BASE_URL}/bookings`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(booking)
       });
