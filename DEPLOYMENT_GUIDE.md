@@ -15,7 +15,7 @@ Sistema de reservas de transporte con:
 - **Health Check**: `/health`
 - **Variables de entorno necesarias**:
   ```
-  MONGODB_URI=mongodb+srv://administrator-booking:Acer84010702@airportshuttletpa.wapwkji.mongodb.net/?retryWrites=true&w=majority&appName=airportshuttletpa
+  MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/?retryWrites=true&w=majority&appName=airportshuttletpa
   JWT_SECRET=tu-jwt-secret-super-seguro
   JWT_EXPIRES_IN=24h
   NODE_ENV=production
@@ -27,7 +27,7 @@ Sistema de reservas de transporte con:
 - **Variables de entorno necesarias**:
   ```
   REACT_APP_API_BASE_URL=https://api.booking.airportshuttletpa.com/api
-  REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyCt4x1Zu_Cgtfdu8Tst65C871kVabm4ZCk
+  REACT_APP_GOOGLE_MAPS_API_KEY=tu-google-maps-api-key-aqui
   PORT=3000
   NODE_ENV=production
   ```

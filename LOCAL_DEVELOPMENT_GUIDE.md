@@ -44,7 +44,7 @@ npm start
 ```env
 PORT=5001
 NODE_ENV=development
-MONGODB_URI=mongodb+srv://administrator-booking:Acer84010702@airportshuttletpa.wapwkji.mongodb.net/?retryWrites=true&w=majority&appName=airportshuttletpa
+MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/?retryWrites=true&w=majority&appName=airportshuttletpa
 JWT_SECRET=your-super-secret-jwt-key-here
 FRONTEND_URL=http://localhost:3000
 ```
@@ -52,7 +52,7 @@ FRONTEND_URL=http://localhost:3000
 ### **Frontend (.env)**
 ```env
 REACT_APP_API_BASE_URL=http://localhost:5001/api
-REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyCt4x1Zu_Cgtfdu8Tst65C871kVabm4ZCk
+REACT_APP_GOOGLE_MAPS_API_KEY=tu-google-maps-api-key-aqui
 PORT=3000
 NODE_ENV=development
 ```

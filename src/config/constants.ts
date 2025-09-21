@@ -1,7 +1,7 @@
 // Global Constants Configuration
 
 // Google Maps API Configuration
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyCt4x1Zu_Cgtfdu8Tst65C871kVabm4ZCk';
+export const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'AIzaSyCt4x1Zu_Cgtfdu8Tst65C871kVabm4ZCk';
 
 // API Base URLs
 const resolvedApiBaseUrl = process.env.REACT_APP_API_BASE_URL
