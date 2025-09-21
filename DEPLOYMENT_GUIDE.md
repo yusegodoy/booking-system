@@ -27,7 +27,7 @@ Sistema de reservas de transporte con:
 - **Variables de entorno necesarias**:
   ```
   REACT_APP_API_BASE_URL=https://api.booking.airportshuttletpa.com/api
-  REACT_APP_GOOGLE_MAPS_API_KEY=tu-google-maps-api-key-aqui
+      REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyDmGneyTKBsTG52pm2zdPHvZiCC_KJosio
   PORT=3000
   NODE_ENV=production
   ```
