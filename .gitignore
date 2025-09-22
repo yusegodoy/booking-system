@@ -29,11 +29,21 @@ setup-credentials.bat
 setup-with-real-data.bat
 *-with-real-data.bat
 
-# Files that may contain exposed credentials
-DEPLOYMENT_GUIDE.md
-ADMIN_PORTAL_README.md
+# Documentation files (may contain sensitive information)
+README.md
+*README*.md
 *_GUIDE.md
 *_README.md
+*INSTRUCCIONES*
+*SETUP*.md
+*GUIA*.md
+*PASOS*.md
+*SOLUCION*.md
+*CHECKLIST*.md
+*CONFIGURACION*.md
+*TRASH*.md
+*DEPLOYMENT*.md
+*GUIDE*.md
 
 # Logs
 logs
