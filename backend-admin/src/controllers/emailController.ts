@@ -35,9 +35,20 @@ export const emailController = {
         isActive
       } = req.body;
 
-      let config = await EmailConfig.findOne({ isActive: true });
+      console.log('📧 Updating email configuration:', {
+        smtpHost,
+        smtpPort,
+        smtpUser,
+        smtpSecure,
+        fromEmail,
+        isActive
+      });
+
+      // Find existing config or create new one
+      let config = await EmailConfig.findOne({});
       
       if (!config) {
+        console.log('📧 Creating new email configuration');
         config = new EmailConfig({
           smtpHost,
           smtpPort,
@@ -50,10 +61,11 @@ export const emailController = {
           isActive
         });
       } else {
+        console.log('📧 Updating existing email configuration');
         config.smtpHost = smtpHost;
         config.smtpPort = smtpPort;
         config.smtpUser = smtpUser;
-        if (smtpPassword) {
+        if (smtpPassword && smtpPassword.trim() !== '') {
           config.smtpPassword = smtpPassword;
         }
         config.smtpSecure = smtpSecure;
@@ -64,6 +76,7 @@ export const emailController = {
       }
 
       await config.save();
+      console.log('✅ Email configuration saved successfully');
 
       // Reinitialize email service if config is active
       if (isActive) {

@@ -17,7 +17,8 @@
     "seed": "ts-node src/scripts/seedData.ts",
     "seed-drivers": "ts-node src/scripts/seedDrivers.ts",
     "sync-calendar": "ts-node src/scripts/syncExistingBookings.ts",
-    "setup-email": "ts-node src/scripts/setupEmailConfig.ts"
+    "setup-email": "ts-node src/scripts/setupEmailConfig.ts",
+    "fix-email": "ts-node src/scripts/fixEmailConfig.ts"
   },
   "keywords": [
     "admin",
