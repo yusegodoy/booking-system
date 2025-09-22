@@ -25,6 +25,12 @@ env.local.frontend
 setup-new-credentials.bat
 setup-credentials.bat
 
+# Files that may contain exposed credentials
+DEPLOYMENT_GUIDE.md
+ADMIN_PORTAL_README.md
+*_GUIDE.md
+*_README.md
+
 # Logs
 logs
 *.log
