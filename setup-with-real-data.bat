@@ -36,7 +36,7 @@ echo.
 echo ⚙️ Configurando frontend...
 if not exist .env (
     echo REACT_APP_API_BASE_URL=http://localhost:5001/api > .env
-    echo REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyDmGneyTKBsTG52pm2zdPHvZiCC_KJosio >> .env
+    echo REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyAmvLXQ9H-vxLl6N2iVp9G_3loPsVPhxCg >> .env
     echo ✅ Archivo .env creado en frontend
 ) else (
     echo ℹ️ El archivo .env ya existe en frontend
