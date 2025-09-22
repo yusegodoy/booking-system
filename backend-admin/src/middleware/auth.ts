@@ -15,7 +15,14 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction):
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const JWT_SECRET = process.env.JWT_SECRET;
+    
+    if (!JWT_SECRET) {
+      res.status(500).json({ message: 'JWT_SECRET not configured' });
+      return;
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
     const user = await User.findById(decoded.userId).select('-password');
     
     if (!user) {
