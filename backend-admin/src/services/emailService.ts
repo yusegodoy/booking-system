@@ -53,10 +53,30 @@ class EmailService {
 
   async initialize() {
     try {
-      this.config = await EmailConfig.findOne({ isActive: true });
-      if (!this.config) {
-        console.log('No active email configuration found');
-        return false;
+      // First try to use environment variables (Railway configuration)
+      const envEmailHost = process.env.EMAIL_HOST;
+      const envEmailPort = process.env.EMAIL_PORT;
+      const envEmailUser = process.env.EMAIL_USER;
+      const envEmailPass = process.env.EMAIL_PASS;
+
+      if (envEmailHost && envEmailUser && envEmailPass) {
+        console.log('Using environment variables for email configuration');
+        this.config = {
+          smtpHost: envEmailHost,
+          smtpPort: parseInt(envEmailPort || '587'),
+          smtpUser: envEmailUser,
+          smtpPassword: envEmailPass,
+          smtpSecure: false,
+          fromEmail: envEmailUser,
+          fromName: 'Airport Shuttle TPA'
+        };
+      } else {
+        // Fallback to database configuration
+        this.config = await EmailConfig.findOne({ isActive: true });
+        if (!this.config) {
+          console.log('No active email configuration found in database or environment variables');
+          return false;
+        }
       }
 
       console.log('Initializing email service with config:', {
