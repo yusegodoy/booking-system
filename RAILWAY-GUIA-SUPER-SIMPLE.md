@@ -70,11 +70,11 @@ Hacer clic en "New Variable" y agregar:
 
 **Variable 1:**
 - Name: `MONGODB_URI`
-- Value: `mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa`
+- Value: `mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE`
 
 **Variable 2:**
 - Name: `JWT_SECRET`
-- Value: `your-super-secure-jwt-secret-here`
+- Value: `YOUR_SUPER_SECURE_JWT_SECRET_HERE`
 
 **Variable 3:**
 - Name: `CORS_ORIGIN`

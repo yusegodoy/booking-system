@@ -56,8 +56,8 @@
 3. **Agregar** estas variables una por una:
 
 ```
-MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa
-JWT_SECRET=your-super-secure-jwt-secret-here
+MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE
+JWT_SECRET=YOUR_SUPER_SECURE_JWT_SECRET_HERE
 CORS_ORIGIN=https://airportshuttletpa.com
 PORT=5001
 NODE_ENV=production
@@ -77,8 +77,8 @@ NODE_ENV=production
 ### 4.1 Variables de Google Calendar
 Agregar en Railway:
 ```
-GOOGLE_CLIENT_ID=tu-google-client-id-aqui
-GOOGLE_CLIENT_SECRET=tu-google-client-secret-aqui
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
 GOOGLE_REDIRECT_URI=https://airportshuttletpa.com/auth/google/callback
 ```
 
@@ -88,7 +88,7 @@ Agregar en Railway:
 EMAIL_HOST=smtp.ionos.com
 EMAIL_PORT=587
 EMAIL_USER=info@airportshuttletpa.com
-EMAIL_PASS=tu-password-email-aqui
+EMAIL_PASS=YOUR_EMAIL_PASSWORD_HERE
 ```
 
 ---

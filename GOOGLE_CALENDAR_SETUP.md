@@ -52,8 +52,8 @@ This feature allows you to automatically sync all your bookings with Google Cale
 Add these to your `.env` file:
 
 ```env
-GOOGLE_CLIENT_ID=your_client_id_here
-GOOGLE_CLIENT_SECRET=your_client_secret_here
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
 GOOGLE_REDIRECT_URI=http://localhost:5001/api/google-calendar/auth/callback
 ```
 
@@ -213,8 +213,8 @@ Tampa Airport to Downtown Hotel
 
 ### **Environment Variables**
 ```env
-GOOGLE_CLIENT_ID=your_production_client_id
-GOOGLE_CLIENT_SECRET=your_production_client_secret
+GOOGLE_CLIENT_ID=YOUR_PRODUCTION_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_PRODUCTION_CLIENT_SECRET_HERE
 GOOGLE_REDIRECT_URI=https://yourdomain.com/api/google-calendar/auth/callback
 ```
 

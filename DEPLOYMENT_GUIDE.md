@@ -15,8 +15,8 @@ Sistema de reservas de transporte con:
 - **Health Check**: `/health`
 - **Variables de entorno necesarias**:
   ```
-  MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/?retryWrites=true&w=majority&appName=airportshuttletpa
-  JWT_SECRET=tu-jwt-secret-super-seguro
+  MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE?retryWrites=true&w=majority&appName=APPNAME
+  JWT_SECRET=YOUR_SUPER_SECURE_JWT_SECRET_HERE
   JWT_EXPIRES_IN=24h
   NODE_ENV=production
   FRONTEND_URL=https://booking.airportshuttletpa.com

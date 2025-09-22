@@ -42,8 +42,8 @@ Antes de usar la aplicación, asegúrate de tener instalado:
    MONGODB_URI=mongodb://localhost:27017/booking-admin
    JWT_SECRET=your-secret-key-here
    PORT=5001
-   GOOGLE_CLIENT_ID=your-google-client-id-here
-   GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+   GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+   GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
    ```
 
 ## 🚀 **Iniciar la Aplicación**

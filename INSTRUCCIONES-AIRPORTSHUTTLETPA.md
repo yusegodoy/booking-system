@@ -48,10 +48,10 @@
 En el panel de Railway, ve a "Variables" y agrega:
 
 ```
-MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa
-JWT_SECRET=your-super-secure-jwt-secret-here
-GOOGLE_CLIENT_ID=tu-google-client-id-aqui
-GOOGLE_CLIENT_SECRET=tu-google-client-secret-aqui
+MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE
+JWT_SECRET=YOUR_SUPER_SECURE_JWT_SECRET_HERE
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
 CORS_ORIGIN=https://airportshuttletpa.com
 ```
 

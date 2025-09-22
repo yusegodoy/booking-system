@@ -6,8 +6,8 @@ Add these variables to your `backend-admin/.env` file:
 
 ```env
 # Google Calendar Integration
-GOOGLE_CLIENT_ID=your_google_client_id_here
-GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
 GOOGLE_REDIRECT_URI=http://localhost:5001/api/google-calendar/auth/callback
 ```
 
@@ -33,15 +33,15 @@ JWT_SECRET=your-super-secret-jwt-key-change-in-production
 FRONTEND_URL=http://localhost:3000
 
 # Google Calendar Integration
-GOOGLE_CLIENT_ID=your_google_client_id_here
-GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
 GOOGLE_REDIRECT_URI=http://localhost:5001/api/google-calendar/auth/callback
 
 # Email Configuration (if using email features)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
+EMAIL_PASS=YOUR_EMAIL_PASSWORD_HERE
 ```
 
 ## ⚠️ Important Notes

@@ -44,8 +44,8 @@ npm start
 ```env
 PORT=5001
 NODE_ENV=development
-MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/?retryWrites=true&w=majority&appName=airportshuttletpa
-JWT_SECRET=your-super-secret-jwt-key-here
+MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE?retryWrites=true&w=majority&appName=APPNAME
+JWT_SECRET=YOUR_SUPER_SECURE_JWT_SECRET_HERE
 FRONTEND_URL=http://localhost:3000
 ```
 

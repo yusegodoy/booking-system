@@ -49,8 +49,8 @@
 3. **Agregar** estas variables:
 
 ```
-MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/airportshuttletpa
-JWT_SECRET=your-super-secure-jwt-secret-here
+MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE
+JWT_SECRET=YOUR_SUPER_SECURE_JWT_SECRET_HERE
 CORS_ORIGIN=https://airportshuttletpa.com
 PORT=5001
 NODE_ENV=production
