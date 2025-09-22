@@ -37,6 +37,18 @@ setup-with-real-data.bat
 *start*.bat
 *stop*.bat
 
+# Test and development scripts (NEVER commit these)
+test-*.js
+check-*.js
+update-*.js
+fix-*.js
+prepare-*.js
+restore-*.js
+start-*.js
+debug-*.js
+migrate-*.js
+export-*.js
+
 # Documentation files (may contain sensitive information)
 README.md
 *README*.md
