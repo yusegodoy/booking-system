@@ -200,14 +200,21 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
   const handleConfigSave = async () => {
     setLoading(true);
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${API_BASE_URL}/email/config`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(emailConfig)
+        body: JSON.stringify(emailConfig),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Email configuration saved successfully!' });
@@ -217,7 +224,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
         setMessage({ type: 'error', text: error.message || 'Failed to save configuration' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Error saving configuration' });
+      if (error.name === 'AbortError') {
+        setMessage({ type: 'error', text: 'Request timed out. Please try again.' });
+      } else {
+        setMessage({ type: 'error', text: 'Error saving configuration' });
+      }
     } finally {
       setLoading(false);
     }
@@ -226,13 +237,20 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
   const handleTestEmail = async () => {
     setLoading(true);
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for email
+
       const response = await fetch(`${API_BASE_URL}/email/config/test`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Test email sent successfully! Check your inbox.' });
@@ -241,7 +259,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
         setMessage({ type: 'error', text: error.message || 'Failed to send test email' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Error sending test email' });
+      if (error.name === 'AbortError') {
+        setMessage({ type: 'error', text: 'Test email timed out. Please check your SMTP settings.' });
+      } else {
+        setMessage({ type: 'error', text: 'Error sending test email' });
+      }
     } finally {
       setLoading(false);
     }

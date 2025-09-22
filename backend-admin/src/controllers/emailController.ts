@@ -67,7 +67,15 @@ export const emailController = {
 
       // Reinitialize email service if config is active
       if (isActive) {
-        await emailService.initialize();
+        try {
+          const emailInitialized = await emailService.initialize();
+          if (!emailInitialized) {
+            console.warn('Email service initialization failed, but configuration was saved');
+          }
+        } catch (error) {
+          console.error('Error reinitializing email service:', error);
+          // Don't fail the request if email service fails to initialize
+        }
       }
 
       const { smtpPassword: _, ...safeConfig } = config.toObject();
