@@ -7,10 +7,21 @@ export const emailController = {
   // Email Configuration
   async getEmailConfig(req: Request, res: Response) {
     try {
-      const config = await EmailConfig.findOne({ isActive: true });
+      // Get any email configuration (not just active ones)
+      const config = await EmailConfig.findOne({});
       if (!config) {
         return res.status(404).json({ message: 'No email configuration found' });
       }
+      
+      console.log('📧 Loading email config from database:', {
+        smtpHost: config.smtpHost,
+        smtpPort: config.smtpPort,
+        smtpUser: config.smtpUser,
+        smtpSecure: config.smtpSecure,
+        fromEmail: config.fromEmail,
+        isActive: config.isActive,
+        hasPassword: !!config.smtpPassword
+      });
       
       // Don't send password in response
       const { smtpPassword, ...safeConfig } = config.toObject();

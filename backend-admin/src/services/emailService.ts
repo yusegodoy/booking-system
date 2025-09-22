@@ -54,10 +54,17 @@ class EmailService {
   async initialize() {
     try {
       // Use database configuration (managed through admin portal)
-      this.config = await EmailConfig.findOne({ isActive: true });
+      this.config = await EmailConfig.findOne({});
       if (!this.config) {
-        console.log('No active email configuration found in database');
+        console.log('No email configuration found in database');
         console.log('Please configure email settings through the admin portal');
+        return false;
+      }
+
+      // Check if password is configured
+      if (!this.config.smtpPassword || this.config.smtpPassword.trim() === '') {
+        console.log('Email configuration found but password is not set');
+        console.log('Please set the SMTP password in the admin portal');
         return false;
       }
 

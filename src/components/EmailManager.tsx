@@ -36,14 +36,14 @@ interface EmailManagerProps {
 const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
   const [activeSection, setActiveSection] = useState<'config' | 'templates'>('config');
   const [emailConfig, setEmailConfig] = useState<EmailConfig>({
-    smtpHost: 'smtp.ionos.com',
+    smtpHost: '',
     smtpPort: 587,
     smtpUser: '',
     smtpPassword: '',
     smtpSecure: false,
-    fromEmail: 'info@airportshuttletpa.com',
-    fromName: 'Airport Shuttle TPA',
-    adminEmail: 'info@airportshuttletpa.com',
+    fromEmail: '',
+    fromName: '',
+    adminEmail: '',
     isActive: false
   });
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
@@ -69,6 +69,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
 
   const fetchEmailConfig = async () => {
     try {
+      console.log('📧 Fetching email configuration from database...');
       const response = await fetch(`${API_BASE_URL}/email/config`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -78,10 +79,22 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
 
       if (response.ok) {
         const config = await response.json();
+        console.log('📧 Email config loaded from database:', config);
         setEmailConfig(config);
       } else if (response.status === 404) {
         // No config found, use defaults
-        console.log('No email configuration found, using defaults');
+        console.log('📧 No email configuration found, using defaults');
+        setEmailConfig({
+          smtpHost: 'smtp.ionos.com',
+          smtpPort: 587,
+          smtpUser: 'info@airportshuttletpa.com',
+          smtpPassword: '',
+          smtpSecure: false,
+          fromEmail: 'info@airportshuttletpa.com',
+          fromName: 'Airport Shuttle TPA',
+          adminEmail: 'info@airportshuttletpa.com',
+          isActive: false
+        });
       }
     } catch (error) {
       console.error('Error fetching email config:', error);
