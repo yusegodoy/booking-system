@@ -223,13 +223,13 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
         const error = await response.json();
         setMessage({ type: 'error', text: error.message || 'Failed to save configuration' });
       }
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        setMessage({ type: 'error', text: 'Request timed out. Please try again.' });
-      } else {
-        setMessage({ type: 'error', text: 'Error saving configuration' });
-      }
-    } finally {
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          setMessage({ type: 'error', text: 'Request timed out. Please try again.' });
+        } else {
+          setMessage({ type: 'error', text: 'Error saving configuration' });
+        }
+      } finally {
       setLoading(false);
     }
   };
@@ -258,13 +258,13 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
         const error = await response.json();
         setMessage({ type: 'error', text: error.message || 'Failed to send test email' });
       }
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        setMessage({ type: 'error', text: 'Test email timed out. Please check your SMTP settings.' });
-      } else {
-        setMessage({ type: 'error', text: 'Error sending test email' });
-      }
-    } finally {
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          setMessage({ type: 'error', text: 'Test email timed out. Please check your SMTP settings.' });
+        } else {
+          setMessage({ type: 'error', text: 'Error sending test email' });
+        }
+      } finally {
       setLoading(false);
     }
   };
