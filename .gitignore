@@ -54,7 +54,6 @@ config-real-data.env
 production-config.env
 package-production.json
 nginx-config.conf
-build.sh
 start-production.sh
 configure-firewall.ps1
 start-mobile-access.ps1
