@@ -160,8 +160,8 @@ interface User {
 ### Cambiar Credenciales por Defecto
 Edita el archivo `.env` en el backend:
 ```env
-ADMIN_EMAIL=tu-email@ejemplo.com
-ADMIN_PASSWORD=tu-contraseña-segura
+ADMIN_EMAIL=YOUR_ADMIN_EMAIL_HERE
+ADMIN_PASSWORD=YOUR_ADMIN_PASSWORD_HERE
 ```
 
 ### Modificar Estilos
