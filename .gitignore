@@ -19,6 +19,12 @@ backend-admin/.env
 backend-admin/.env.local
 env.local.frontend
 
+# Credential files (NEVER commit these)
+*-credentials.bat
+*-credentials.sh
+setup-new-credentials.bat
+setup-credentials.bat
+
 # Logs
 logs
 *.log
