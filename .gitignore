@@ -26,6 +26,8 @@ env.local.frontend
 *-credentials.sh
 setup-new-credentials.bat
 setup-credentials.bat
+setup-with-real-data.bat
+*-with-real-data.bat
 
 # Files that may contain exposed credentials
 DEPLOYMENT_GUIDE.md
