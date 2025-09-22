@@ -17,6 +17,8 @@ dist/
 backend-admin/env.local
 backend-admin/.env
 backend-admin/.env.local
+backend-admin/env.local.development
+backend-admin/env.*
 env.local.frontend
 
 # Credential files (NEVER commit these)
