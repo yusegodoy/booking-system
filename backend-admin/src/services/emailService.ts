@@ -73,7 +73,8 @@ class EmailService {
         port: this.config.smtpPort,
         secure: this.config.smtpSecure,
         user: this.config.smtpUser,
-        fromEmail: this.config.fromEmail
+        fromEmail: this.config.fromEmail,
+        hasPassword: !!this.config.smtpPassword
       });
 
       this.transporter = nodemailer.createTransport({
