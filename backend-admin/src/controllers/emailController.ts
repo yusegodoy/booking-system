@@ -150,6 +150,83 @@ export const emailController = {
     }
   },
 
+  // Diagnostics: test DNS and TCP reachability to SMTP host/ports from server
+  async runSmtpDiagnostics(req: Request, res: Response) {
+    try {
+      const config = await EmailConfig.findOne({});
+      if (!config) {
+        return res.status(404).json({ success: false, message: 'No email configuration found' });
+      }
+
+      const dns = await import('dns');
+      const net = await import('net');
+
+      const host = config.smtpHost || 'smtp.ionos.com';
+      const ports = [587, 465, config.smtpPort].filter((v, i, a) => a.indexOf(v) === i);
+      const results: any = { host, records: null, tests: [] };
+
+      console.log('📡 SMTP diagnostics started for host:', host, 'ports:', ports);
+
+      // DNS lookup
+      try {
+        const lookup = await (dns.promises as any).lookup(host, { all: true });
+        results.records = lookup;
+        console.log('📡 DNS lookup results:', lookup);
+      } catch (e) {
+        results.records = { error: (e as any)?.message || 'DNS lookup failed' };
+        console.warn('⚠️  DNS lookup failed:', results.records);
+      }
+
+      // TCP connect helper
+      const tryConnect = (port: number) => {
+        return new Promise((resolve) => {
+          const socket = new (net as any).Socket();
+          const start = Date.now();
+          let finished = false;
+
+          const finish = (ok: boolean, info: any = {}) => {
+            if (finished) return;
+            finished = true;
+            try { socket.destroy(); } catch {}
+            resolve({ port, ok, ms: Date.now() - start, ...info });
+          };
+
+          socket.setTimeout(8000);
+          socket.on('connect', () => finish(true));
+          socket.on('timeout', () => finish(false, { error: 'timeout' }));
+          socket.on('error', (err: any) => finish(false, { error: err?.code || err?.message }));
+          socket.connect(port, host);
+        });
+      };
+
+      for (const p of ports) {
+        // eslint-disable-next-line no-await-in-loop
+        const r: any = await tryConnect(p);
+        results.tests.push(r);
+        console.log('📡 Port test:', r);
+      }
+
+      console.log('✅ SMTP diagnostics finished');
+      return res.json({
+        success: true,
+        info: {
+          config: {
+            host: config.smtpHost,
+            port: config.smtpPort,
+            secure: config.smtpSecure,
+            user: config.smtpUser,
+            hasPassword: !!config.smtpPassword,
+            isActive: config.isActive
+          },
+          connectivity: results
+        }
+      });
+    } catch (error) {
+      console.error('SMTP diagnostics error:', error);
+      return res.status(500).json({ success: false, message: 'Diagnostics failed' });
+    }
+  },
+
   // Email Templates
   async getEmailTemplates(req: Request, res: Response) {
     try {

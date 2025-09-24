@@ -8,6 +8,8 @@ const router = express.Router();
 router.get('/config', auth, emailController.getEmailConfig);
 router.put('/config', auth, emailController.updateEmailConfig);
 router.post('/config/test', auth, emailController.testEmailConfig);
+// Diagnostics
+router.get('/diagnostics', auth, emailController.runSmtpDiagnostics);
 
 // Email Templates routes
 router.get('/templates', auth, emailController.getEmailTemplates);
