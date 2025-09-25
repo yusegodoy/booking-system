@@ -19,7 +19,8 @@
     "sync-calendar": "ts-node src/scripts/syncExistingBookings.ts",
     "setup-email": "ts-node src/scripts/setupEmailConfig.ts",
     "fix-email": "ts-node src/scripts/fixEmailConfig.ts",
-    "diagnose-email": "ts-node src/scripts/emailDiagnostics.ts"
+    "diagnose-email": "ts-node src/scripts/emailDiagnostics.ts",
+    "create-test-template": "ts-node src/scripts/createTestEmailTemplate.ts"
   },
   "keywords": [
     "admin",

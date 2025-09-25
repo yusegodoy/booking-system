@@ -69,9 +69,8 @@ class ResendEmailService {
         return false;
       }
 
-      // Use Resend verified domain or fallback to your personal email
-      // Change this to your verified email in Resend
-      this.fromEmail = 'yusegodoy@gmail.com'; // Replace with your verified email
+      // Use verified domain from Resend
+      this.fromEmail = this.config.fromEmail || 'info@airportshuttletpa.com';
 
       console.log('🚀 Initializing Resend email service:', {
         apiKey: apiKey.substring(0, 8) + '...',
