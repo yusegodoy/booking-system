@@ -9,8 +9,10 @@ interface AuthRequest extends Request {
 export const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
+    console.log('🔐 Auth middleware - URL:', req.url, 'Token present:', !!token);
     
     if (!token) {
+      console.log('❌ Auth middleware - No token provided');
       res.status(401).json({ message: 'No token, authorization denied' });
       return;
     }
@@ -36,8 +38,10 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction):
     }
 
     req.user = user;
+    console.log('✅ Auth middleware - User authenticated:', user.email, 'Role:', user.role);
     next();
   } catch (error) {
+    console.log('❌ Auth middleware - Token validation failed:', error);
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

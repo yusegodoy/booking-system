@@ -254,10 +254,13 @@ export const emailController = {
   // Email Templates
   async getEmailTemplates(req: Request, res: Response) {
     try {
+      console.log('📧 getEmailTemplates called');
       const templates = await EmailTemplate.find().sort({ createdAt: -1 });
+      console.log('📧 Templates found in database:', templates.length);
+      console.log('📧 Template names:', templates.map(t => t.name));
       return res.json(templates);
     } catch (error) {
-      console.error('Error getting email templates:', error);
+      console.error('❌ Error getting email templates:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   },
