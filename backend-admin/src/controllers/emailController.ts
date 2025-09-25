@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { EmailConfig } from '../models/EmailConfig';
 import { EmailTemplate } from '../models/EmailTemplate';
+import { Booking } from '../models/Booking';
 import { emailService } from '../services/emailService';
 import { resendEmailService } from '../services/resendEmailService';
 
@@ -362,12 +363,28 @@ export const emailController = {
   // Send emails
   async sendTemplateEmail(req: Request, res: Response) {
     try {
+      console.log('📧 sendTemplateEmail called with body:', req.body);
       const { bookingId, templateName, toEmail, ccEmails } = req.body;
 
-      const booking = await require('../models/Booking').Booking.findById(bookingId);
+      if (!bookingId) {
+        console.log('❌ No bookingId provided');
+        return res.status(400).json({ message: 'Booking ID is required' });
+      }
+
+      if (!templateName) {
+        console.log('❌ No templateName provided');
+        return res.status(400).json({ message: 'Template name is required' });
+      }
+
+      console.log('🔍 Looking for booking with ID:', bookingId);
+      const booking = await Booking.findById(bookingId);
       if (!booking) {
+        console.log('❌ Booking not found for ID:', bookingId);
         return res.status(404).json({ message: 'Booking not found' });
       }
+
+      console.log('✅ Booking found:', booking._id);
+      console.log('📧 Sending email with template:', templateName, 'to:', toEmail || booking.userData.email);
 
       const success = await emailService.sendTemplateEmail(
         templateName,
@@ -377,12 +394,14 @@ export const emailController = {
       );
 
       if (success) {
+        console.log('✅ Email sent successfully');
         return res.json({ message: 'Email sent successfully' });
       } else {
+        console.log('❌ Email service returned false');
         return res.status(400).json({ message: 'Failed to send email' });
       }
     } catch (error) {
-      console.error('Error sending template email:', error);
+      console.error('❌ Error sending template email:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   },
