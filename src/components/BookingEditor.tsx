@@ -1382,9 +1382,10 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
   // Email modal functions
   const fetchEmailTemplates = async () => {
     try {
+      const authToken = token || localStorage.getItem('adminToken') || localStorage.getItem('token');
       const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/email/templates`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -1392,6 +1393,9 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
       if (response.ok) {
         const templates = await response.json();
         setEmailTemplates(templates);
+        console.log('📧 Email templates loaded:', templates);
+      } else {
+        console.error('Failed to fetch email templates:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching email templates:', error);

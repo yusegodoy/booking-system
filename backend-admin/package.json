@@ -20,7 +20,9 @@
     "setup-email": "ts-node src/scripts/setupEmailConfig.ts",
     "fix-email": "ts-node src/scripts/fixEmailConfig.ts",
     "diagnose-email": "ts-node src/scripts/emailDiagnostics.ts",
-    "create-test-template": "ts-node src/scripts/createTestEmailTemplate.ts"
+    "create-test-template": "ts-node src/scripts/createTestEmailTemplate.ts",
+    "check-email-templates": "ts-node src/scripts/checkEmailTemplates.ts",
+    "fix-email-template-names": "ts-node src/scripts/fixEmailTemplateNames.ts"
   },
   "keywords": [
     "admin",
