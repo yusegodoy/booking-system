@@ -18,7 +18,8 @@
     "seed-drivers": "ts-node src/scripts/seedDrivers.ts",
     "sync-calendar": "ts-node src/scripts/syncExistingBookings.ts",
     "setup-email": "ts-node src/scripts/setupEmailConfig.ts",
-    "fix-email": "ts-node src/scripts/fixEmailConfig.ts"
+    "fix-email": "ts-node src/scripts/fixEmailConfig.ts",
+    "diagnose-email": "ts-node src/scripts/emailDiagnostics.ts"
   },
   "keywords": [
     "admin",
@@ -41,7 +42,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^6.10.1",
+    "resend": "^6.1.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

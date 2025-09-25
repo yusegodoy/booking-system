@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { EmailConfig } from '../models/EmailConfig';
 import { EmailTemplate } from '../models/EmailTemplate';
 import { emailService } from '../services/emailService';
+import { resendEmailService } from '../services/resendEmailService';
 
 export const emailController = {
   // Email Configuration
@@ -117,28 +118,51 @@ export const emailController = {
         return res.status(400).json({ message: 'No active email configuration found' });
       }
 
-      console.log('Testing email config for:', config.adminEmail);
+      console.log('🚀 Testing email config with Resend for:', config.adminEmail);
 
-      const success = await emailService.initialize();
-      if (!success) {
-        console.error('Email service initialization failed');
+      // Try Resend first (Railway compatible)
+      const resendSuccess = await resendEmailService.initialize();
+      if (resendSuccess) {
+        console.log('✅ Using Resend email service (Railway compatible)');
+        const testResult = await resendEmailService.sendEmail({
+          to: config.adminEmail,
+          subject: 'Test Email - Airport Shuttle TPA (via Resend)',
+          html: '<h1>Test Email via Resend</h1><p>This is a test email to verify your email configuration using Resend API.</p>',
+          text: 'Test Email via Resend - This is a test email to verify your email configuration using Resend API.'
+        });
+
+        if (testResult) {
+          return res.json({ 
+            message: 'Test email sent successfully via Resend (Railway compatible)',
+            service: 'Resend'
+          });
+        }
+      }
+
+      // Fallback to SMTP (only works on Railway Pro plan)
+      console.log('⚠️ Resend not available, trying SMTP fallback...');
+      const smtpSuccess = await emailService.initialize();
+      if (!smtpSuccess) {
+        console.error('Both Resend and SMTP failed');
         return res.status(400).json({ 
-          message: 'Failed to initialize email service. Check your SMTP settings and try again.' 
+          message: 'Email service failed. Please set RESEND_API_KEY in Railway environment variables for Free/Hobby plans, or upgrade to Pro plan for SMTP.' 
         });
       }
 
-      // Send test email
       const testResult = await emailService.sendEmail({
         to: config.adminEmail,
-        subject: 'Test Email - Airport Shuttle TPA',
-        html: '<h1>Test Email</h1><p>This is a test email to verify your email configuration.</p>',
-        text: 'Test Email - This is a test email to verify your email configuration.'
+        subject: 'Test Email - Airport Shuttle TPA (via SMTP)',
+        html: '<h1>Test Email via SMTP</h1><p>This is a test email to verify your email configuration using SMTP.</p>',
+        text: 'Test Email via SMTP - This is a test email to verify your email configuration using SMTP.'
       });
 
       if (testResult) {
-        return res.json({ message: 'Test email sent successfully' });
+        return res.json({ 
+          message: 'Test email sent successfully via SMTP (Pro plan required)',
+          service: 'SMTP'
+        });
       } else {
-        return res.status(400).json({ message: 'Failed to send test email' });
+        return res.status(400).json({ message: 'Failed to send test email via both Resend and SMTP' });
       }
     } catch (error) {
       console.error('Error testing email config:', error);
