@@ -49,6 +49,11 @@ debug-*.js
 migrate-*.js
 export-*.js
 
+# Scripts de diagnóstico (contienen credenciales)
+backend-admin/src/scripts/debug*.ts
+backend-admin/src/scripts/test*.ts
+backend-admin/src/scripts/create*.ts
+
 # Development and configuration files (NEVER commit these)
 config-real-data.env
 production-config.env
