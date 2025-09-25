@@ -7,8 +7,8 @@ export const emailController = {
   // Email Configuration
   async getEmailConfig(req: Request, res: Response) {
     try {
-      // Get any email configuration (not just active ones)
-      const config = await EmailConfig.findOne({});
+      // Get active email configuration (like booking3)
+      const config = await EmailConfig.findOne({ isActive: true });
       if (!config) {
         return res.status(404).json({ message: 'No email configuration found' });
       }
@@ -55,8 +55,8 @@ export const emailController = {
         isActive
       });
 
-      // Find existing config or create new one
-      let config = await EmailConfig.findOne({});
+      // Find existing config or create new one (like booking3)
+      let config = await EmailConfig.findOne({ isActive: true });
       
       if (!config) {
         console.log('📧 Creating new email configuration');
@@ -76,7 +76,7 @@ export const emailController = {
         config.smtpHost = smtpHost;
         config.smtpPort = smtpPort;
         config.smtpUser = smtpUser;
-        if (smtpPassword && smtpPassword.trim() !== '') {
+        if (smtpPassword) {
           config.smtpPassword = smtpPassword;
         }
         config.smtpSecure = smtpSecure;

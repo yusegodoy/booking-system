@@ -77,16 +77,13 @@ class EmailService {
         hasPassword: !!this.config.smtpPassword
       });
 
-      const useSsl = !!this.config.smtpSecure; // true -> SSL (465), false -> STARTTLS (587)
-      const requireTls = !useSsl;             // STARTTLS requires TLS upgrade
-
-      console.log('Email transport security:', { useSsl, requireTls });
+      console.log('Email transport security: using STARTTLS (like booking3)');
 
       this.transporter = nodemailer.createTransport({
         host: this.config.smtpHost,
         port: this.config.smtpPort,
-        secure: useSsl,
-        requireTLS: requireTls,
+        secure: false, // Use STARTTLS instead of SSL (copied from working booking3)
+        requireTLS: true,
         auth: {
           user: this.config.smtpUser,
           pass: this.config.smtpPassword
