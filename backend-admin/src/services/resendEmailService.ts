@@ -263,10 +263,10 @@ class ResendEmailService {
       email: booking.userData.email || '',
       phone: booking.userData.phone || '',
       specialInstructions: booking.userData.specialInstructions || '',
-      groupName: booking.userData.groupName || '',
-      occasion: booking.userData.occasion || '',
-      greetingSign: booking.userData.greetingSign || '',
-      timeZone: booking.userData.timeZone || 'America/New_York',
+      groupName: booking.groupName || '',
+      occasion: booking.occasion || '',
+      greetingSign: booking.greetingSign || '',
+      timeZone: booking.timeZone || 'America/New_York',
       
       // Trip Information
       pickup: booking.tripInfo.pickup || booking.tripInfo.pickupLocation || '',
@@ -277,8 +277,8 @@ class ResendEmailService {
       pickupMinute: booking.tripInfo.pickupMinute || '00',
       pickupPeriod: booking.tripInfo.pickupPeriod || 'AM',
       additionalStops: Array.isArray(booking.tripInfo.stops) ? booking.tripInfo.stops.join(', ') : (booking.tripInfo.stops || ''),
-      routeDistance: booking.tripInfo.routeDistance || '',
-      routeDuration: booking.tripInfo.routeDuration || '',
+      routeDistance: '', // Not available in current IBooking interface
+      routeDuration: '', // Not available in current IBooking interface
       passengers: booking.tripInfo.passengers || 1,
       
       // Luggage & Seats
@@ -327,18 +327,18 @@ class ResendEmailService {
       creditCardFeePercentage: booking.creditCardFeePercentage || 0,
       creditCardFeeFixed: booking.creditCardFeeFixed || 0,
       
-      // Backend Price Breakdown
-      basePrice: booking.basePrice || booking.totalPrice || 0,
-      distancePrice: booking.distancePrice || 0,
-      stopsCharge: booking.stopsCharge || 0,
-      returnTripPrice: booking.returnTripPrice || 0,
-      subtotal: booking.subtotal || booking.totalPrice || 0,
-      paymentDiscount: booking.paymentDiscount || 0,
-      areaName: booking.areaName || '',
-      pricingMethod: booking.pricingMethod || '',
-      distance: booking.distance || 0,
-      surgeMultiplier: booking.surgeMultiplier || 1,
-      surgeName: booking.surgeName || '',
+      // Backend Price Breakdown (using available fields)
+      basePrice: booking.calculatedPrice || booking.totalPrice || 0,
+      distancePrice: 0, // Not available in current IBooking interface
+      stopsCharge: 0, // Not available in current IBooking interface
+      returnTripPrice: booking.roundTripDiscount || 0,
+      subtotal: booking.calculatedPrice || booking.totalPrice || 0,
+      paymentDiscount: booking.discountFixed || 0,
+      areaName: '', // Not available in current IBooking interface
+      pricingMethod: '', // Not available in current IBooking interface
+      distance: 0, // Not available in current IBooking interface
+      surgeMultiplier: 1, // Not available in current IBooking interface
+      surgeName: '', // Not available in current IBooking interface
       
       // Assignment
       assignedDriver: booking.assignedDriver || '',
