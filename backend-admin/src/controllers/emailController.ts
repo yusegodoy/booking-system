@@ -561,5 +561,16 @@ export const emailController = {
       }
       return res.status(500).json({ message: errorMessage });
     }
+  },
+
+  // Get available variables for email templates
+  async getAvailableVariables(req: Request, res: Response) {
+    try {
+      const variables = resendEmailService.getAvailableVariables();
+      return res.json(variables);
+    } catch (error) {
+      console.error('Error getting available variables:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
   }
 };
