@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { connectDB } from './config/database';
 import { emailService } from './services/emailService';
+import { resendEmailService } from './services/resendEmailService';
 import authRoutes from './routes/authRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 import userRoutes from './routes/userRoutes';
@@ -122,10 +123,16 @@ app.listen(PORT, async () => {
   console.log(`Admin backend server running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   
-  // Initialize email service
+  // Initialize email services
   try {
     await emailService.initialize();
   } catch (error) {
     console.log('Email service initialization failed:', error);
+  }
+
+  try {
+    await resendEmailService.initialize();
+  } catch (error) {
+    console.log('Resend email service initialization failed:', error);
   }
 }); 

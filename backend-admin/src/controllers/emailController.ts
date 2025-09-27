@@ -150,6 +150,14 @@ export const emailController = {
         });
       }
 
+      // Ensure Resend service is initialized
+      try {
+        await resendEmailService.initialize();
+      } catch (initError) {
+        console.error('❌ Failed to initialize Resend service:', initError);
+        return res.status(500).json({ message: 'Email service initialization failed' });
+      }
+
       const testResult = await resendEmailService.sendEmail({
         to: config.adminEmail,
         subject: 'Test Email - Airport Shuttle TPA (via Resend)',
@@ -385,6 +393,14 @@ export const emailController = {
 
       console.log('✅ Booking found:', booking._id);
       console.log('📧 Sending email with template:', templateName, 'to:', toEmail || booking.userData.email);
+
+      // Ensure Resend service is initialized
+      try {
+        await resendEmailService.initialize();
+      } catch (initError) {
+        console.error('❌ Failed to initialize Resend service:', initError);
+        return res.status(500).json({ message: 'Email service initialization failed' });
+      }
 
       const success = await resendEmailService.sendTemplateEmail(
         templateName,
