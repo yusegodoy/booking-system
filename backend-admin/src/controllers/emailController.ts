@@ -358,15 +358,6 @@ export const emailController = {
     }
   },
 
-  async getAvailableVariables(req: Request, res: Response) {
-    try {
-      const variables = emailService.getAvailableVariables();
-      return res.json(variables);
-    } catch (error) {
-      console.error('Error getting available variables:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  },
 
   // Send emails
   async sendTemplateEmail(req: Request, res: Response) {
