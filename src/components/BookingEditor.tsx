@@ -3,6 +3,7 @@ import { Autocomplete } from '@react-google-maps/api';
 import { useGoogleMaps } from '../contexts/GoogleMapsContext';
 import { useGlobalRouteCalculation } from '../hooks/useGlobalRouteCalculation';
 import CustomerAutocomplete from './CustomerAutocomplete';
+import { API_BASE_URL } from '../config/constants';
 import './BookingEditor.css';
 
 // Iconos para los botones
@@ -128,6 +129,23 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
   const { routeInfo, isCalculating, calculateRoute, clearRoute } = useGlobalRouteCalculation();
 
   // Autocomplete refs
+  // Suppress Google Maps API warnings for deprecated Autocomplete
+  useEffect(() => {
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      if (args[0] && typeof args[0] === 'string' && 
+          args[0].includes('google.maps.places.Autocomplete') &&
+          args[0].includes('not available to new customers')) {
+        return; // Suppress this specific warning
+      }
+      originalWarn.apply(console, args);
+    };
+    
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
+
   const pickupAutocomplete = useRef<google.maps.places.Autocomplete | null>(null);
   const dropoffAutocomplete = useRef<google.maps.places.Autocomplete | null>(null);
   const stopAutocompletes = useRef<(google.maps.places.Autocomplete | null)[]>([]);
@@ -169,7 +187,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
   const loadVehicleTypes = async () => {
     setVehicleTypesLoading(true);
     try {
-      const response = await fetch('/api/vehicle-types');
+      const response = await fetch(`${API_BASE_URL}/vehicle-types`);
       if (response.ok) {
         const data = await response.json();
         setVehicleTypes(data);
@@ -179,6 +197,9 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
       }
     } catch (error) {
       console.error('Error loading vehicle types:', error);
+      if (error instanceof SyntaxError) {
+        console.error('JSON parsing error - server may be returning HTML instead of JSON');
+      }
     } finally {
       setVehicleTypesLoading(false);
     }
@@ -195,7 +216,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
         return;
       }
 
-      const response = await fetch('/api/vehicles', {
+      const response = await fetch(`${API_BASE_URL}/vehicles`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -211,7 +232,10 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
           vehicleType: v.vehicleType 
         })));
       } else {
-        console.error('Error loading vehicles:', response.status);
+        console.error('Error loading vehicles:', response.status, response.statusText);
+        if (response.status === 401) {
+          console.error('Authentication failed - token may be expired or invalid');
+        }
         setVehicles([]);
       }
     } catch (error) {
@@ -233,7 +257,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
         return;
       }
 
-      const response = await fetch('/api/drivers', {
+      const response = await fetch(`${API_BASE_URL}/drivers`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -244,11 +268,17 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
         setDrivers(driversData);
         console.log('Drivers loaded:', driversData);
       } else {
-        console.error('Error loading drivers:', response.status);
+        console.error('Error loading drivers:', response.status, response.statusText);
+        if (response.status === 401) {
+          console.error('Authentication failed - token may be expired or invalid');
+        }
         setDrivers([]);
       }
     } catch (error) {
       console.error('Error loading drivers:', error);
+      if (error instanceof SyntaxError) {
+        console.error('JSON parsing error - server may be returning HTML instead of JSON');
+      }
       setDrivers([]);
     } finally {
       setDriversLoading(false);
@@ -810,7 +840,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
         pricingMethod: 'distance'
       };
 
-      const response = await fetch('/api/bookings', {
+      const response = await fetch(`${API_BASE_URL}/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1177,7 +1207,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
       console.log('Stops count being sent:', stopsCount);
       console.log('Payment method being sent:', formData.paymentMethod);
 
-      const response = await fetch('http://localhost:5001/api/pricing/calculate', {
+      const response = await fetch(`${API_BASE_URL}/pricing/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -1383,7 +1413,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
   const fetchEmailTemplates = async () => {
     try {
       const authToken = token || localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/email/templates`, {
+      const response = await fetch(`${API_BASE_URL}/email/templates`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
@@ -1399,6 +1429,9 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
       }
     } catch (error) {
       console.error('Error fetching email templates:', error);
+      if (error instanceof SyntaxError) {
+        console.error('JSON parsing error - server may be returning HTML instead of JSON');
+      }
     }
   };
 
@@ -1416,7 +1449,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
 
     setEmailLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/email/send`, {
+      const response = await fetch(`${API_BASE_URL}/email/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,

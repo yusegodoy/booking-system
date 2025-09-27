@@ -231,6 +231,23 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
     surgeName: string;
   } | null>(null);
 
+  // Suppress Google Maps API warnings for deprecated Autocomplete
+  useEffect(() => {
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      if (args[0] && typeof args[0] === 'string' && 
+          args[0].includes('google.maps.places.Autocomplete') &&
+          args[0].includes('not available to new customers')) {
+        return; // Suppress this specific warning
+      }
+      originalWarn.apply(console, args);
+    };
+    
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
+
   const pickupAutocomplete = useRef<google.maps.places.Autocomplete | null>(null);
   const dropoffAutocomplete = useRef<google.maps.places.Autocomplete | null>(null);
   const stopAutocompletes = useRef<(google.maps.places.Autocomplete | null)[]>([]);
