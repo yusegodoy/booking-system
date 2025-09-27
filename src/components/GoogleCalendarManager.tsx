@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/constants';
 import './GoogleCalendarManager.css';
 import GoogleCalendarConfigForm from './GoogleCalendarConfigForm';
 
@@ -59,7 +60,7 @@ const GoogleCalendarManager: React.FC = () => {
 
   const loadConfig = async () => {
     try {
-      const response = await axios.get<ApiResponse>('/api/google-calendar/config', {
+      const response = await axios.get<ApiResponse>(`${API_BASE_URL}/google-calendar/config`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setConfig(response.data.config || null);
@@ -72,7 +73,7 @@ const GoogleCalendarManager: React.FC = () => {
 
   const loadCalendars = async () => {
     try {
-      const response = await axios.get<ApiResponse>('/api/google-calendar/calendars', {
+      const response = await axios.get<ApiResponse>(`${API_BASE_URL}/google-calendar/calendars`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCalendars(response.data.calendars || []);
@@ -84,7 +85,7 @@ const GoogleCalendarManager: React.FC = () => {
   const handleAuth = async () => {
     try {
       setLoading(true);
-      const response = await axios.get<ApiResponse>('/api/google-calendar/auth/url', {
+      const response = await axios.get<ApiResponse>(`${API_BASE_URL}/google-calendar/auth/url`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -113,7 +114,7 @@ const GoogleCalendarManager: React.FC = () => {
         // Also check the callback URL every 2 seconds
         const checkCallback = setInterval(async () => {
           try {
-            const response = await axios.get('/api/google-calendar/config', {
+            const response = await axios.get(`${API_BASE_URL}/google-calendar/config`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -154,7 +155,18 @@ const GoogleCalendarManager: React.FC = () => {
 
     } catch (error: any) {
       setLoading(false);
-      const errorMessage = error.response?.data?.message || 'Failed to start authentication';
+      let errorMessage = 'Failed to start authentication';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Google Calendar credentials not configured. Please check your environment variables.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error while generating authentication URL. Please try again.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      }
+      
       setMessage({ type: 'error', text: errorMessage });
     }
   };
@@ -162,7 +174,7 @@ const GoogleCalendarManager: React.FC = () => {
   const handleSaveConfig = async () => {
     try {
       setLoading(true);
-      await axios.put<ApiResponse>('/api/google-calendar/config', formData, {
+      await axios.put<ApiResponse>(`${API_BASE_URL}/google-calendar/config`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -179,7 +191,7 @@ const GoogleCalendarManager: React.FC = () => {
   const handleSaveAdvancedConfig = async (advancedConfig: any) => {
     try {
       setLoading(true);
-      await axios.put<ApiResponse>('/api/google-calendar/config', advancedConfig, {
+      await axios.put<ApiResponse>(`${API_BASE_URL}/google-calendar/config`, advancedConfig, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -196,7 +208,7 @@ const GoogleCalendarManager: React.FC = () => {
   const handleTestConnection = async () => {
     try {
       setLoading(true);
-      const response = await axios.post<ApiResponse>('/api/google-calendar/test-connection', {}, {
+      const response = await axios.post<ApiResponse>(`${API_BASE_URL}/google-calendar/test-connection`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -211,7 +223,7 @@ const GoogleCalendarManager: React.FC = () => {
   const handleSyncAll = async () => {
     try {
       setLoading(true);
-      const response = await axios.post<ApiResponse>('/api/google-calendar/sync/all', {}, {
+      const response = await axios.post<ApiResponse>(`${API_BASE_URL}/google-calendar/sync/all`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -234,7 +246,7 @@ const GoogleCalendarManager: React.FC = () => {
 
     try {
       setLoading(true);
-      await axios.post<ApiResponse>('/api/google-calendar/disconnect', {}, {
+      await axios.post<ApiResponse>(`${API_BASE_URL}/google-calendar/disconnect`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
