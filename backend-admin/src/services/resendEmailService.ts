@@ -257,31 +257,116 @@ class ResendEmailService {
     }
 
     return {
-      // Customer info
-      customerName: `${booking.userData.firstName} ${booking.userData.lastName}`,
-      customerEmail: booking.userData.email,
-      customerPhone: booking.userData.phone,
+      // Customer Information (from BookingEditor FormData)
+      firstName: booking.userData.firstName || '',
+      lastName: booking.userData.lastName || '',
+      email: booking.userData.email || '',
+      phone: booking.userData.phone || '',
+      specialInstructions: booking.userData.specialInstructions || '',
+      groupName: booking.userData.groupName || '',
+      occasion: booking.userData.occasion || '',
+      greetingSign: booking.userData.greetingSign || '',
+      timeZone: booking.userData.timeZone || 'America/New_York',
       
-      // Booking info
+      // Trip Information
+      pickup: booking.tripInfo.pickup || booking.tripInfo.pickupLocation || '',
+      dropoff: booking.tripInfo.dropoff || booking.tripInfo.dropoffLocation || '',
+      date: booking.tripInfo.date || '',
+      pickupDate: booking.tripInfo.pickupDate || booking.tripInfo.date || '',
+      pickupHour: booking.tripInfo.pickupHour || '12',
+      pickupMinute: booking.tripInfo.pickupMinute || '00',
+      pickupPeriod: booking.tripInfo.pickupPeriod || 'AM',
+      additionalStops: Array.isArray(booking.tripInfo.stops) ? booking.tripInfo.stops.join(', ') : (booking.tripInfo.stops || ''),
+      routeDistance: booking.tripInfo.routeDistance || '',
+      routeDuration: booking.tripInfo.routeDuration || '',
+      passengers: booking.tripInfo.passengers || 1,
+      
+      // Luggage & Seats
+      checkedLuggage: booking.tripInfo.checkedLuggage || 0,
+      carryOn: booking.tripInfo.carryOn || 0,
+      infantSeats: booking.tripInfo.infantSeats || 0,
+      toddlerSeats: booking.tripInfo.toddlerSeats || 0,
+      boosterSeats: booking.tripInfo.boosterSeats || 0,
+      
+      // Flight Information
+      flight: booking.tripInfo.flight || '',
+      airportCode: booking.tripInfo.airportCode || '',
+      terminalGate: booking.tripInfo.terminalGate || '',
+      meetOption: booking.tripInfo.meetOption || '',
+      
+      // Round Trip Information
+      roundTrip: booking.tripInfo.roundTrip || false,
+      returnDate: booking.tripInfo.returnDate || '',
+      returnHour: booking.tripInfo.returnHour || '',
+      returnMinute: booking.tripInfo.returnMinute || '',
+      returnPeriod: booking.tripInfo.returnPeriod || '',
+      returnFlight: booking.tripInfo.returnFlight || '',
+      
+      // Service & Vehicle
+      serviceType: booking.serviceType || '',
+      vehicleType: booking.vehicleType || 'Standard Vehicle',
+      
+      // Payment and Status
+      paymentMethod: booking.paymentMethod || '',
+      checkoutType: booking.checkoutType || '',
+      isLoggedIn: booking.isLoggedIn || false,
+      status: booking.status || '',
+      totalPrice: booking.totalPrice || 0,
+      
+      // Price Breakdown
+      calculatedPrice: booking.calculatedPrice || booking.totalPrice || 0,
+      bookingFee: booking.bookingFee || 0,
+      childSeatsCharge: booking.childSeatsCharge || 0,
+      discountPercentage: booking.discountPercentage || 0,
+      discountFixed: booking.discountFixed || 0,
+      roundTripDiscount: booking.roundTripDiscount || 0,
+      gratuityPercentage: booking.gratuityPercentage || 0,
+      gratuityFixed: booking.gratuityFixed || 0,
+      taxesPercentage: booking.taxesPercentage || 0,
+      taxesFixed: booking.taxesFixed || 0,
+      creditCardFeePercentage: booking.creditCardFeePercentage || 0,
+      creditCardFeeFixed: booking.creditCardFeeFixed || 0,
+      
+      // Backend Price Breakdown
+      basePrice: booking.basePrice || booking.totalPrice || 0,
+      distancePrice: booking.distancePrice || 0,
+      stopsCharge: booking.stopsCharge || 0,
+      returnTripPrice: booking.returnTripPrice || 0,
+      subtotal: booking.subtotal || booking.totalPrice || 0,
+      paymentDiscount: booking.paymentDiscount || 0,
+      areaName: booking.areaName || '',
+      pricingMethod: booking.pricingMethod || '',
+      distance: booking.distance || 0,
+      surgeMultiplier: booking.surgeMultiplier || 1,
+      surgeName: booking.surgeName || '',
+      
+      // Assignment
+      assignedDriver: booking.assignedDriver || '',
+      assignedVehicle: booking.assignedVehicle || '',
+      notes: booking.notes || '',
+      dispatchNotes: booking.dispatchNotes || '',
+      
+      // Notifications
+      changeNotifications: booking.changeNotifications || '',
+      
+      // Booking Identifiers
       bookingId: booking._id?.toString() || '',
-      confirmationNumber: booking.outboundConfirmationNumber,
+      confirmationNumber: booking.outboundConfirmationNumber || '',
+      outboundConfirmationNumber: booking.outboundConfirmationNumber || '',
+      returnConfirmationNumber: booking.returnConfirmationNumber || '',
+      
+      // Legacy variables for backward compatibility
+      customerName: `${booking.userData.firstName} ${booking.userData.lastName}`,
+      customerEmail: booking.userData.email || '',
+      customerPhone: booking.userData.phone || '',
       bookingDate: new Date(booking.createdAt).toLocaleDateString(),
       bookingTime: new Date(booking.createdAt).toLocaleTimeString(),
-      
-      // Trip info
-      pickupLocation: booking.tripInfo.pickupLocation || booking.tripInfo.pickup,
-      dropoffLocation: booking.tripInfo.dropoffLocation || booking.tripInfo.dropoff,
-      tripDate: booking.tripInfo.date,
+      pickupLocation: booking.tripInfo.pickup || booking.tripInfo.pickupLocation || '',
+      dropoffLocation: booking.tripInfo.dropoff || booking.tripInfo.dropoffLocation || '',
+      tripDate: booking.tripInfo.date || '',
       tripTime: `${booking.tripInfo.pickupHour}:${booking.tripInfo.pickupMinute} ${booking.tripInfo.pickupPeriod}`,
-      
-      // Vehicle info
-      vehicleType: booking.vehicleType || 'Standard Vehicle',
-      vehicleCapacity: booking.tripInfo.passengers.toString(),
-      
-      // Pricing
-      basePrice: booking.totalPrice,
+      vehicleCapacity: booking.tripInfo.passengers?.toString() || '1',
       additionalFees: 0,
-      totalPrice: booking.totalPrice,
       
       // Company info
       companyName: companyInfo.companyName,
@@ -340,18 +425,58 @@ class ResendEmailService {
 
   getAvailableVariables(): string[] {
     return [
-      'customerName', 'customerEmail', 'customerPhone',
-      'bookingId', 'confirmationNumber', 'bookingDate', 'bookingTime',
-      'pickupLocation', 'dropoffLocation', 'tripDate', 'tripTime',
-      'vehicleType', 'vehicleCapacity',
-      'basePrice', 'additionalFees', 'totalPrice',
+      // Customer Information (from BookingEditor FormData)
+      'firstName', 'lastName', 'email', 'phone', 'specialInstructions',
+      'groupName', 'occasion', 'greetingSign', 'timeZone',
+      
+      // Trip Information
+      'pickup', 'dropoff', 'date', 'pickupDate', 'pickupHour', 'pickupMinute', 'pickupPeriod',
+      'additionalStops', 'routeDistance', 'routeDuration', 'passengers',
+      
+      // Luggage & Seats
+      'checkedLuggage', 'carryOn', 'infantSeats', 'toddlerSeats', 'boosterSeats',
+      
+      // Flight Information
+      'flight', 'airportCode', 'terminalGate', 'meetOption',
+      
+      // Round Trip Information
+      'roundTrip', 'returnDate', 'returnHour', 'returnMinute', 'returnPeriod', 'returnFlight',
+      
+      // Service & Vehicle
+      'serviceType', 'vehicleType',
+      
+      // Payment and Status
+      'paymentMethod', 'checkoutType', 'isLoggedIn', 'status', 'totalPrice',
+      
+      // Price Breakdown
+      'calculatedPrice', 'bookingFee', 'childSeatsCharge', 'discountPercentage', 'discountFixed',
+      'roundTripDiscount', 'gratuityPercentage', 'gratuityFixed', 'taxesPercentage', 'taxesFixed',
+      'creditCardFeePercentage', 'creditCardFeeFixed',
+      
+      // Backend Price Breakdown
+      'basePrice', 'distancePrice', 'stopsCharge', 'returnTripPrice', 'subtotal',
+      'paymentDiscount', 'areaName', 'pricingMethod', 'distance', 'surgeMultiplier', 'surgeName',
+      
+      // Assignment
+      'assignedDriver', 'assignedVehicle', 'notes', 'dispatchNotes',
+      
+      // Notifications
+      'changeNotifications',
+      
+      // Booking Identifiers
+      'bookingId', 'confirmationNumber', 'outboundConfirmationNumber', 'returnConfirmationNumber',
+      
+      // Company Information
       'companyName', 'companyEmail', 'companyPhone', 'companyWebsite',
       'companyAddress', 'companyCity', 'companyState', 'companyZipCode', 'companyCountry',
       'fullAddress', 'businessLicense', 'taxId', 'operatingHours', 'emergencyContact',
+      
+      // Company Branding
       'logoUrl', 'primaryColor', 'secondaryColor', 'accentColor', 'backgroundColor', 'textColor',
       'facebookUrl', 'instagramUrl', 'twitterUrl', 'linkedinUrl',
-      'description', 'missionStatement', 'termsOfService', 'privacyPolicy',
-      'serviceAgreement'
+      
+      // Legal & Policies
+      'description', 'missionStatement', 'termsOfService', 'privacyPolicy', 'serviceAgreement'
     ];
   }
 }
