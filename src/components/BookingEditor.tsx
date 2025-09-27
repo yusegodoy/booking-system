@@ -1050,15 +1050,46 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
       
       console.log('Saving additional stops:', formData.additionalStops);
       console.log('Additional stops count:', formData.additionalStops.length);
-             console.log('Saving to stops field in DB:', updatedBooking.tripInfo.stops);
-       console.log('Trip info being saved:', updatedBooking.tripInfo);
-       
-       await onSave(updatedBooking);
-       
-       // Mark as saved successfully
-       console.log('Setting hasBeenSaved to true');
-       setHasBeenSaved(true);
-       console.log('hasBeenSaved should now be true');
+      console.log('Saving to stops field in DB:', updatedBooking.tripInfo.stops);
+      console.log('Trip info being saved:', updatedBooking.tripInfo);
+      
+      // If editing existing booking, update in backend first
+      if (booking && booking._id) {
+        console.log('Updating existing booking in backend:', booking._id);
+        
+        const authToken = token || localStorage.getItem('adminToken') || localStorage.getItem('token');
+        if (!authToken) {
+          throw new Error('No authentication token found. Please log in again.');
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/bookings/${booking._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(updatedBooking)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const savedBooking = await response.json();
+        console.log('Booking updated successfully in backend:', savedBooking);
+        
+        // Call onSave with the updated booking from backend
+        await onSave(savedBooking);
+      } else {
+        // For new bookings, just call onSave (it will handle the creation)
+        await onSave(updatedBooking);
+      }
+      
+      // Mark as saved successfully
+      console.log('Setting hasBeenSaved to true');
+      setHasBeenSaved(true);
+      console.log('hasBeenSaved should now be true');
     } catch (error) {
       console.error('Error saving booking:', error);
     } finally {
