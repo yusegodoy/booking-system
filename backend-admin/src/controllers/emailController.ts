@@ -150,17 +150,17 @@ export const emailController = {
         });
       }
 
-      const testResult = await emailService.sendEmail({
+      const testResult = await resendEmailService.sendEmail({
         to: config.adminEmail,
-        subject: 'Test Email - Airport Shuttle TPA (via SMTP)',
-        html: '<h1>Test Email via SMTP</h1><p>This is a test email to verify your email configuration using SMTP.</p>',
-        text: 'Test Email via SMTP - This is a test email to verify your email configuration using SMTP.'
+        subject: 'Test Email - Airport Shuttle TPA (via Resend)',
+        html: '<h1>Test Email via Resend</h1><p>This is a test email to verify your email configuration using Resend API.</p>',
+        text: 'Test Email via Resend - This is a test email to verify your email configuration using Resend API.'
       });
 
       if (testResult) {
         return res.json({ 
-          message: 'Test email sent successfully via SMTP (Pro plan required)',
-          service: 'SMTP'
+          message: 'Test email sent successfully via Resend',
+          service: 'Resend'
         });
       } else {
         return res.status(400).json({ message: 'Failed to send test email via both Resend and SMTP' });
@@ -386,7 +386,7 @@ export const emailController = {
       console.log('✅ Booking found:', booking._id);
       console.log('📧 Sending email with template:', templateName, 'to:', toEmail || booking.userData.email);
 
-      const success = await emailService.sendTemplateEmail(
+      const success = await resendEmailService.sendTemplateEmail(
         templateName,
         booking,
         toEmail || booking.userData.email,
@@ -517,7 +517,7 @@ export const emailController = {
       });
 
       // Send test email
-      const testResult = await emailService.sendEmail({
+      const testResult = await resendEmailService.sendEmail({
         to: testEmail,
         subject: `[TEST] ${processedSubject}`,
         html: processedHtmlContent,
