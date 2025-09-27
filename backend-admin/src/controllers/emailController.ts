@@ -94,13 +94,10 @@ export const emailController = {
       // Reinitialize email service if config is active
       if (isActive) {
         try {
-          const emailInitialized = await emailService.initialize();
-          if (!emailInitialized) {
-            console.warn('Email service initialization failed, but configuration was saved');
-          }
+          // Resend service will be initialized when needed
+          console.log('Email configuration saved - Resend service will initialize when needed');
         } catch (error) {
-          console.error('Error reinitializing email service:', error);
-          // Don't fail the request if email service fails to initialize
+          console.error('Error in email configuration:', error);
         }
       }
 
@@ -140,39 +137,10 @@ export const emailController = {
         }
       }
 
-      // Fallback to SMTP (only works on Railway Pro plan)
-      console.log('⚠️ Resend not available, trying SMTP fallback...');
-      const smtpSuccess = await emailService.initialize();
-      if (!smtpSuccess) {
-        console.error('Both Resend and SMTP failed');
-        return res.status(400).json({ 
-          message: 'Email service failed. Please set RESEND_API_KEY in Railway environment variables for Free/Hobby plans, or upgrade to Pro plan for SMTP.' 
-        });
-      }
-
-      // Ensure Resend service is initialized
-      try {
-        await resendEmailService.initialize();
-      } catch (initError) {
-        console.error('❌ Failed to initialize Resend service:', initError);
-        return res.status(500).json({ message: 'Email service initialization failed' });
-      }
-
-      const testResult = await resendEmailService.sendEmail({
-        to: config.adminEmail,
-        subject: 'Test Email - Airport Shuttle TPA (via Resend)',
-        html: '<h1>Test Email via Resend</h1><p>This is a test email to verify your email configuration using Resend API.</p>',
-        text: 'Test Email via Resend - This is a test email to verify your email configuration using Resend API.'
+      console.error('Resend service not available');
+      return res.status(400).json({ 
+        message: 'Email service failed. Please set RESEND_API_KEY in Railway environment variables.' 
       });
-
-      if (testResult) {
-        return res.json({ 
-          message: 'Test email sent successfully via Resend',
-          service: 'Resend'
-        });
-      } else {
-        return res.status(400).json({ message: 'Failed to send test email via both Resend and SMTP' });
-      }
     } catch (error) {
       console.error('Error testing email config:', error);
       let errorMessage = 'Internal server error';
@@ -180,83 +148,6 @@ export const emailController = {
         errorMessage = error.message;
       }
       return res.status(500).json({ message: errorMessage });
-    }
-  },
-
-  // Diagnostics: test DNS and TCP reachability to SMTP host/ports from server
-  async runSmtpDiagnostics(req: Request, res: Response) {
-    try {
-      const config = await EmailConfig.findOne({});
-      if (!config) {
-        return res.status(404).json({ success: false, message: 'No email configuration found' });
-      }
-
-      const dns = await import('dns');
-      const net = await import('net');
-
-      const host = config.smtpHost || 'smtp.ionos.com';
-      const ports = [587, 465, config.smtpPort].filter((v, i, a) => a.indexOf(v) === i);
-      const results: any = { host, records: null, tests: [] };
-
-      console.log('📡 SMTP diagnostics started for host:', host, 'ports:', ports);
-
-      // DNS lookup
-      try {
-        const lookup = await (dns.promises as any).lookup(host, { all: true });
-        results.records = lookup;
-        console.log('📡 DNS lookup results:', lookup);
-      } catch (e) {
-        results.records = { error: (e as any)?.message || 'DNS lookup failed' };
-        console.warn('⚠️  DNS lookup failed:', results.records);
-      }
-
-      // TCP connect helper
-      const tryConnect = (port: number) => {
-        return new Promise((resolve) => {
-          const socket = new (net as any).Socket();
-          const start = Date.now();
-          let finished = false;
-
-          const finish = (ok: boolean, info: any = {}) => {
-            if (finished) return;
-            finished = true;
-            try { socket.destroy(); } catch {}
-            resolve({ port, ok, ms: Date.now() - start, ...info });
-          };
-
-          socket.setTimeout(8000);
-          socket.on('connect', () => finish(true));
-          socket.on('timeout', () => finish(false, { error: 'timeout' }));
-          socket.on('error', (err: any) => finish(false, { error: err?.code || err?.message }));
-          socket.connect(port, host);
-        });
-      };
-
-      for (const p of ports) {
-        // eslint-disable-next-line no-await-in-loop
-        const r: any = await tryConnect(p);
-        results.tests.push(r);
-        console.log('📡 Port test:', r);
-      }
-
-      console.log('✅ SMTP diagnostics finished');
-      return res.json({
-        success: true,
-        info: {
-          config: {
-            host: config.smtpHost,
-            port: config.smtpPort,
-            secure: config.smtpSecure,
-            user: config.smtpUser,
-            hasPassword: !!config.smtpPassword,
-            isActive: config.isActive
-          },
-          connectivity: results
-        }
-      });
-    } catch (error) {
-      console.error('SMTP diagnostics error:', error);
-      return res.status(500).json({ success: false, message: 'Diagnostics failed' });
     }
   },
 
@@ -438,13 +329,7 @@ export const emailController = {
         return res.status(400).json({ message: 'No active email configuration found' });
       }
 
-      // Initialize email service
-      const success = await emailService.initialize();
-      if (!success) {
-        return res.status(400).json({ 
-          message: 'Failed to initialize email service. Check your SMTP settings.' 
-        });
-      }
+      // Resend service will be initialized when needed
 
       // Create sample booking data for testing
       const sampleBooking = {

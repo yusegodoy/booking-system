@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
 import { connectDB } from './config/database';
-import { emailService } from './services/emailService';
+// Email service removed - using Resend only
 import { resendEmailService } from './services/resendEmailService';
 import authRoutes from './routes/authRoutes';
 import bookingRoutes from './routes/bookingRoutes';
@@ -123,13 +123,7 @@ app.listen(PORT, async () => {
   console.log(`Admin backend server running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   
-  // Initialize email services
-  try {
-    await emailService.initialize();
-  } catch (error) {
-    console.log('Email service initialization failed:', error);
-  }
-
+  // Initialize Resend email service
   try {
     await resendEmailService.initialize();
   } catch (error) {
