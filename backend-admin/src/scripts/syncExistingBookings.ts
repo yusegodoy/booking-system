@@ -10,7 +10,7 @@ dotenv.config();
 async function syncExistingBookings() {
   try {
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/booking_system';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/booking-admin';
     await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB');
 

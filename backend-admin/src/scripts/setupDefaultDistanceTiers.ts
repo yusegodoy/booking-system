@@ -1,10 +1,15 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import { VehicleType } from '../models/VehicleType';
+
+// Load environment variables
+dotenv.config();
 
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/booking-admin');
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/booking-admin';
+    await mongoose.connect(mongoUri);
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
