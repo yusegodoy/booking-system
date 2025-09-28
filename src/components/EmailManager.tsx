@@ -50,6 +50,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [availableVariables, setAvailableVariables] = useState<string[]>([]);
+  const [variablesByCategory, setVariablesByCategory] = useState<{[category: string]: any[]}>({});
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -65,6 +66,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
     fetchEmailConfig();
     fetchTemplates();
     fetchAvailableVariables();
+    fetchVariablesByCategory();
   }, [token]);
 
   const fetchEmailConfig = async () => {
@@ -142,10 +144,13 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
         const sampleData: { [key: string]: any } = {};
         variables.forEach((variable: string) => {
           switch (variable) {
-            case 'customerName':
-              sampleData[variable] = 'John Doe';
+            case 'firstName':
+              sampleData[variable] = 'John';
               break;
-            case 'customerEmail':
+            case 'lastName':
+              sampleData[variable] = 'Doe';
+              break;
+            case 'email':
               sampleData[variable] = 'john.doe@example.com';
               break;
             case 'customerPhone':
@@ -207,6 +212,25 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
       }
     } catch (error) {
       console.error('Error fetching variables:', error);
+    }
+  };
+
+  const fetchVariablesByCategory = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/email/variables/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const categories = await response.json();
+        setVariablesByCategory(categories);
+        console.log('📊 Variables by category loaded:', Object.keys(categories).length, 'categories');
+      }
+    } catch (error) {
+      console.error('Error fetching variables by category:', error);
     }
   };
 
@@ -668,6 +692,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
                    onChange={(value) => setSelectedTemplate({...selectedTemplate, htmlContent: value})}
                    placeholder="Start writing your email template..."
                    variables={availableVariables}
+                   variablesByCategory={variablesByCategory}
                    onVariableInsert={(variable) => console.log(`Variable inserted: ${variable}`)}
                  />
                </div>
