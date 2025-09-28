@@ -642,36 +642,41 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
             </div>
 
             <div className="template-editor">
-              <div className="form-group">
-                <label>Template Name:</label>
-                <input
-                  type="text"
-                  value={selectedTemplate.name}
-                  onChange={(e) => setSelectedTemplate({...selectedTemplate, name: e.target.value})}
-                  placeholder="confirmation"
-                />
+              {/* Form Header - Side by side layout for desktop */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Template Name:</label>
+                  <input
+                    type="text"
+                    value={selectedTemplate.name}
+                    onChange={(e) => setSelectedTemplate({...selectedTemplate, name: e.target.value})}
+                    placeholder="confirmation"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Type:</label>
+                  <select
+                    value={selectedTemplate.type}
+                    onChange={(e) => setSelectedTemplate({...selectedTemplate, type: e.target.value as any})}
+                  >
+                    <option value="custom">Custom</option>
+                    <option value="confirmation">Confirmation</option>
+                    <option value="receipt">Receipt</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Subject:</label>
-                <input
-                  type="text"
-                  value={selectedTemplate.subject}
-                  onChange={(e) => setSelectedTemplate({...selectedTemplate, subject: e.target.value})}
-                  placeholder="Booking Confirmation - {{confirmationNumber}}"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Type:</label>
-                <select
-                  value={selectedTemplate.type}
-                  onChange={(e) => setSelectedTemplate({...selectedTemplate, type: e.target.value as any})}
-                >
-                  <option value="custom">Custom</option>
-                  <option value="confirmation">Confirmation</option>
-                  <option value="receipt">Receipt</option>
-                </select>
+              <div className="form-row single">
+                <div className="form-group">
+                  <label>Subject:</label>
+                  <input
+                    type="text"
+                    value={selectedTemplate.subject}
+                    onChange={(e) => setSelectedTemplate({...selectedTemplate, subject: e.target.value})}
+                    placeholder="Booking Confirmation - {{confirmationNumber}}"
+                  />
+                </div>
               </div>
 
               <div className="form-group">
@@ -685,32 +690,40 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
                 </label>
               </div>
 
-                             <div className="form-group">
-                 <label>HTML Content:</label>
-                 <RichTextEditor
-                   value={selectedTemplate.htmlContent}
-                   onChange={(value) => setSelectedTemplate({...selectedTemplate, htmlContent: value})}
-                   placeholder="Start writing your email template..."
-                   variables={availableVariables}
-                   variablesByCategory={variablesByCategory}
-                   onVariableInsert={(variable) => console.log(`Variable inserted: ${variable}`)}
-                 />
-               </div>
+              {/* Content Sections - Side by side layout for desktop */}
+              <div className="content-sections">
+                <div className="html-content-section">
+                  <div className="form-group">
+                    <label>HTML Content:</label>
+                    <div className="rich-text-editor">
+                      <RichTextEditor
+                        value={selectedTemplate.htmlContent}
+                        onChange={(value) => setSelectedTemplate({...selectedTemplate, htmlContent: value})}
+                        placeholder="Start writing your email template..."
+                        variables={availableVariables}
+                        variablesByCategory={variablesByCategory}
+                        onVariableInsert={(variable) => console.log(`Variable inserted: ${variable}`)}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                                              <div className="form-group">
-                   <label>Text Content (Plain Text Version):</label>
-                   <textarea
-                     value={selectedTemplate.textContent}
-                     onChange={(e) => setSelectedTemplate({...selectedTemplate, textContent: e.target.value})}
-                     placeholder="Plain text version of the email (for email clients that don't support HTML)"
-                     rows={8}
-                     style={{ fontFamily: 'Courier New, monospace', fontSize: '14px' }}
-                   />
-                   <div style={{ color: '#666', marginTop: '5px', display: 'block', fontSize: '12px' }}>
-                     This is the plain text version that will be sent to email clients that don't support HTML.
-                     You can use the same variables here: {'{{customerName}}'}, {'{{confirmationNumber}}'}, etc.
-                   </div>
-                 </div>
+                <div className="text-content-section">
+                  <div className="form-group">
+                    <label>Text Content (Plain Text Version):</label>
+                    <textarea
+                      value={selectedTemplate.textContent}
+                      onChange={(e) => setSelectedTemplate({...selectedTemplate, textContent: e.target.value})}
+                      placeholder="Plain text version of the email (for email clients that don't support HTML)"
+                      rows={12}
+                    />
+                    <div style={{ color: '#666', marginTop: '5px', display: 'block', fontSize: '12px' }}>
+                      This is the plain text version that will be sent to email clients that don't support HTML.
+                      You can use the same variables here: {'{{customerName}}'}, {'{{confirmationNumber}}'}, etc.
+                    </div>
+                  </div>
+                </div>
+              </div>
 
                              <div className="form-actions">
                  <button
