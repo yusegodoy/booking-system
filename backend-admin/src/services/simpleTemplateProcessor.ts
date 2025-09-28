@@ -84,11 +84,18 @@ export class SimpleTemplateProcessor {
       return data.specialInstructions ? content : '';
     });
     
-    // Handle passenger pluralization
-    const passengerRegex = /\{\{passengers\}\} \{\{#if \(eq passengers 1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g;
-    result = result.replace(passengerRegex, (match) => {
-      const plural = data.passengers === 1 ? 'person' : 'people';
-      return `${data.passengers} ${plural}`;
+    // Handle passenger pluralization - multiple patterns
+    const passengerPatterns = [
+      /\{\{passengers\}\} \{\{#if \(eq passengers 1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g,
+      /\{\{passengers\}\} \{\{#if \(eq passengers 1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g,
+      /\{\{passengers\}\} \{\{#if \(eq passengers 1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g
+    ];
+    
+    passengerPatterns.forEach(pattern => {
+      result = result.replace(pattern, (match) => {
+        const plural = data.passengers === 1 ? 'person' : 'people';
+        return `${data.passengers} ${plural}`;
+      });
     });
     
     return result;
