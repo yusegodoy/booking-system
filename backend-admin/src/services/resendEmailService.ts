@@ -3,6 +3,7 @@ import { EmailConfig } from '../models/EmailConfig';
 import { EmailTemplate } from '../models/EmailTemplate';
 import { EmailVariable } from '../models/EmailVariable';
 import { IBooking } from '../models/Booking';
+import { TemplateProcessor } from './templateProcessor';
 
 export interface EmailData {
   to: string;
@@ -152,10 +153,16 @@ class ResendEmailService {
         return false;
       }
 
+      // Use the new TemplateProcessor for Handlebars support
+      const processed = TemplateProcessor.processEmailTemplate(
+        template.htmlContent, 
+        template.textContent, 
+        booking
+      );
+
+      // Process subject with simple variable replacement for now
       const variables = await this.extractVariablesFromBooking(booking);
       const subject = this.replaceVariables(template.subject, variables);
-      const htmlContent = this.replaceVariables(template.htmlContent, variables);
-      const textContent = this.replaceVariables(template.textContent, variables);
 
       // Add admin email to CC if not already included
       if (this.config?.adminEmail && !ccEmails.includes(this.config.adminEmail)) {
@@ -165,8 +172,8 @@ class ResendEmailService {
       return await this.sendEmail({
         to: toEmail,
         subject,
-        html: htmlContent,
-        text: textContent,
+        html: processed.html,
+        text: processed.text,
         cc: ccEmails
       });
     } catch (error) {
@@ -405,15 +412,10 @@ class ResendEmailService {
   }
 
   private replaceVariables(content: string, variables: TemplateVariables): string {
-    let result = content;
-    
-    // Replace all variables in the format {{variableName}}
-    Object.entries(variables).forEach(([key, value]) => {
-      const regex = new RegExp(`{{${key}}}`, 'gi');
-      result = result.replace(regex, String(value));
-    });
-    
-    return result;
+    // Use the new TemplateProcessor for Handlebars support
+    const processor = TemplateProcessor.getInstance();
+    const data = TemplateProcessor.extractDataFromBooking(variables as any);
+    return processor.processTemplate(content, data);
   }
 
   async sendConfirmationEmail(booking: IBooking): Promise<boolean> {
