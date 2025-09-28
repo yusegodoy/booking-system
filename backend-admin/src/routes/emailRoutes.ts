@@ -18,6 +18,7 @@ router.delete('/templates/:id', auth, emailController.deleteEmailTemplate);
 
 // Email Variables
 router.get('/variables', auth, emailController.getAvailableVariables);
+router.get('/variables/categories', auth, emailController.getVariablesByCategory);
 
 // Send emails
 router.post('/send', auth, emailController.sendTemplateEmail);

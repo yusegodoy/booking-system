@@ -23,7 +23,8 @@
     "create-test-template": "ts-node src/scripts/createTestEmailTemplate.ts",
     "check-email-templates": "ts-node src/scripts/checkEmailTemplates.ts",
     "fix-email-template-names": "ts-node src/scripts/fixEmailTemplateNames.ts",
-    "debug-email-templates": "ts-node src/scripts/debugEmailTemplates.ts"
+    "debug-email-templates": "ts-node src/scripts/debugEmailTemplates.ts",
+    "populate-email-variables": "ts-node src/scripts/populateEmailVariables.ts"
   },
   "keywords": [
     "admin",

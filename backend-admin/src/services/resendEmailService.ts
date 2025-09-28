@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { EmailConfig } from '../models/EmailConfig';
 import { EmailTemplate } from '../models/EmailTemplate';
+import { EmailVariable } from '../models/EmailVariable';
 import { IBooking } from '../models/Booking';
 
 export interface EmailData {
@@ -423,61 +424,82 @@ class ResendEmailService {
     return await this.sendTemplateEmail('receipt', booking, booking.userData.email);
   }
 
-  getAvailableVariables(): string[] {
+  async getAvailableVariables(): Promise<string[]> {
+    try {
+      // Try to get variables from database first
+      const dbVariables = await EmailVariable.find({ isActive: true }).sort({ category: 1, variableName: 1 });
+      
+      if (dbVariables.length > 0) {
+        console.log(`📊 Loaded ${dbVariables.length} email variables from database`);
+        return dbVariables.map(variable => variable.variableName);
+      }
+      
+      // Fallback to hardcoded variables if database is empty
+      console.log('⚠️  No variables found in database, using fallback hardcoded list');
+      return this.getFallbackVariables();
+      
+    } catch (error) {
+      console.error('❌ Error loading variables from database:', error);
+      console.log('🔄 Using fallback hardcoded variables');
+      return this.getFallbackVariables();
+    }
+  }
+
+  private getFallbackVariables(): string[] {
     return [
-      // Customer Information (from BookingEditor FormData)
+      // Customer Information
       'firstName', 'lastName', 'email', 'phone', 'specialInstructions',
-      'groupName', 'occasion', 'greetingSign', 'timeZone',
       
       // Trip Information
-      'pickup', 'dropoff', 'date', 'pickupDate', 'pickupHour', 'pickupMinute', 'pickupPeriod',
-      'additionalStops', 'routeDistance', 'routeDuration', 'passengers',
+      'pickup', 'dropoff', 'pickupDate', 'pickupTime', 'passengers', 'flight',
       
-      // Luggage & Seats
-      'checkedLuggage', 'carryOn', 'infantSeats', 'toddlerSeats', 'boosterSeats',
+      // Vehicle Information
+      'vehicleType', 'assignedVehicle',
       
-      // Flight Information
-      'flight', 'airportCode', 'terminalGate', 'meetOption',
+      // Pricing & Payment
+      'totalPrice', 'paymentMethod',
       
-      // Round Trip Information
-      'roundTrip', 'returnDate', 'returnHour', 'returnMinute', 'returnPeriod', 'returnFlight',
+      // Child Safety
+      'infantSeats', 'toddlerSeats', 'boosterSeats',
       
-      // Service & Vehicle
-      'serviceType', 'vehicleType',
+      // Driver Assignment
+      'assignedDriver',
       
-      // Payment and Status
-      'paymentMethod', 'checkoutType', 'isLoggedIn', 'status', 'totalPrice',
-      
-      // Price Breakdown
-      'calculatedPrice', 'bookingFee', 'childSeatsCharge', 'discountPercentage', 'discountFixed',
-      'roundTripDiscount', 'gratuityPercentage', 'gratuityFixed', 'taxesPercentage', 'taxesFixed',
-      'creditCardFeePercentage', 'creditCardFeeFixed',
-      
-      // Backend Price Breakdown
-      'basePrice', 'distancePrice', 'stopsCharge', 'returnTripPrice', 'subtotal',
-      'paymentDiscount', 'areaName', 'pricingMethod', 'distance', 'surgeMultiplier', 'surgeName',
-      
-      // Assignment
-      'assignedDriver', 'assignedVehicle', 'notes', 'dispatchNotes',
-      
-      // Notifications
-      'changeNotifications',
-      
-      // Booking Identifiers
-      'bookingId', 'confirmationNumber', 'outboundConfirmationNumber', 'returnConfirmationNumber',
+      // Booking Details
+      'confirmationNumber', 'bookingDate',
       
       // Company Information
-      'companyName', 'companyEmail', 'companyPhone', 'companyWebsite',
-      'companyAddress', 'companyCity', 'companyState', 'companyZipCode', 'companyCountry',
-      'fullAddress', 'businessLicense', 'taxId', 'operatingHours', 'emergencyContact',
-      
-      // Company Branding
-      'logoUrl', 'primaryColor', 'secondaryColor', 'accentColor', 'backgroundColor', 'textColor',
-      'facebookUrl', 'instagramUrl', 'twitterUrl', 'linkedinUrl',
-      
-      // Legal & Policies
-      'description', 'missionStatement', 'termsOfService', 'privacyPolicy', 'serviceAgreement'
+      'companyName', 'companyPhone', 'companyEmail'
     ];
+  }
+
+  async getVariablesByCategory(): Promise<{[category: string]: any[]}> {
+    try {
+      const variables = await EmailVariable.find({ isActive: true }).sort({ category: 1, variableName: 1 });
+      
+      const categories: {[category: string]: any[]} = {};
+      
+      variables.forEach(variable => {
+        if (!categories[variable.category]) {
+          categories[variable.category] = [];
+        }
+        
+        categories[variable.category].push({
+          variableName: variable.variableName,
+          codeField: variable.codeField,
+          description: variable.description,
+          dataType: variable.dataType,
+          isRequired: variable.isRequired,
+          exampleValue: variable.exampleValue
+        });
+      });
+      
+      return categories;
+      
+    } catch (error) {
+      console.error('❌ Error loading variables by category:', error);
+      return {};
+    }
   }
 }
 

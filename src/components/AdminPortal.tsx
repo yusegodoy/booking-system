@@ -12,6 +12,7 @@ import DriverManager from './DriverManager';
 import TrashManager from './TrashManager';
 import GoogleCalendarManager from './GoogleCalendarManager';
 import EmailManager from './EmailManager';
+import EmailVariablesManager from './EmailVariablesManager';
 import ServiceAgreementManager from './ServiceAgreementManager';
 import CompanyInfoManager from './CompanyInfoManager';
 import UserManager from './UserManager';
@@ -55,7 +56,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'calendar' | 'reservations' | 'customers' | 'settings'>('calendar');
-  const [activeSettingsTab, setActiveSettingsTab] = useState<'users' | 'vehicles' | 'areas' | 'global-variables' | 'drivers' | 'google-calendar' | 'email-config' | 'service-agreement' | 'company-info'>('users');
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'users' | 'vehicles' | 'areas' | 'global-variables' | 'drivers' | 'google-calendar' | 'email-config' | 'email-variables' | 'service-agreement' | 'company-info'>('users');
   
   // Login state
   const [email, setEmail] = useState('');
@@ -994,6 +995,12 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
                 📧 Email Configuration
               </button>
               <button
+                onClick={() => setActiveSettingsTab('email-variables')}
+                className={`settings-nav-button ${activeSettingsTab === 'email-variables' ? 'active' : ''}`}
+              >
+                📝 Email Variables
+              </button>
+              <button
                 onClick={() => setActiveSettingsTab('service-agreement')}
                 className={`settings-nav-button ${activeSettingsTab === 'service-agreement' ? 'active' : ''}`}
               >
@@ -1205,6 +1212,13 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
               {activeSettingsTab === 'email-config' && (
                 <div className="email-config-tab">
                   <EmailManager token={token || ''} />
+                </div>
+              )}
+
+              {/* Email Variables Sub-tab */}
+              {activeSettingsTab === 'email-variables' && (
+                <div className="email-variables-tab">
+                  <EmailVariablesManager />
                 </div>
               )}
 

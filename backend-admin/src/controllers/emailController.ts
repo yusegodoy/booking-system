@@ -442,10 +442,21 @@ export const emailController = {
   // Get available variables for email templates
   async getAvailableVariables(req: Request, res: Response) {
     try {
-      const variables = resendEmailService.getAvailableVariables();
+      const variables = await resendEmailService.getAvailableVariables();
       return res.json(variables);
     } catch (error) {
       console.error('Error getting available variables:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  },
+
+  // Get variables organized by category
+  async getVariablesByCategory(req: Request, res: Response) {
+    try {
+      const categories = await resendEmailService.getVariablesByCategory();
+      return res.json(categories);
+    } catch (error) {
+      console.error('Error getting variables by category:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
