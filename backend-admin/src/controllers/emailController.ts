@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { EmailConfig } from '../models/EmailConfig';
 import { EmailTemplate } from '../models/EmailTemplate';
 import { Booking } from '../models/Booking';
@@ -453,10 +454,17 @@ export const emailController = {
   // Get variables organized by category
   async getVariablesByCategory(req: Request, res: Response) {
     try {
+      console.log('🔍 EmailController: getVariablesByCategory called');
+      console.log('🗄️  MongoDB connection:', mongoose.connection.db?.databaseName);
+      console.log('🏠 MongoDB host:', mongoose.connection.host);
+      
       const categories = await resendEmailService.getVariablesByCategory();
+      console.log('📊 Categories returned:', Object.keys(categories).length);
+      console.log('📋 Categories:', Object.keys(categories));
+      
       return res.json(categories);
     } catch (error) {
-      console.error('Error getting variables by category:', error);
+      console.error('❌ Error getting variables by category:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
