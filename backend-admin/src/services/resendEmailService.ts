@@ -3,7 +3,7 @@ import { EmailConfig } from '../models/EmailConfig';
 import { EmailTemplate } from '../models/EmailTemplate';
 import { EmailVariable } from '../models/EmailVariable';
 import { IBooking } from '../models/Booking';
-import { TemplateProcessor } from './templateProcessor';
+import { SimpleTemplateProcessor } from './simpleTemplateProcessor';
 
 export interface EmailData {
   to: string;
@@ -153,8 +153,8 @@ class ResendEmailService {
         return false;
       }
 
-      // Use the new TemplateProcessor for Handlebars support
-      const processed = TemplateProcessor.processEmailTemplate(
+      // Use the SimpleTemplateProcessor for template processing
+      const processed = SimpleTemplateProcessor.processEmailTemplate(
         template.htmlContent, 
         template.textContent, 
         booking
@@ -412,9 +412,9 @@ class ResendEmailService {
   }
 
   private replaceVariables(content: string, variables: TemplateVariables): string {
-    // Use the new TemplateProcessor for Handlebars support
-    const processor = TemplateProcessor.getInstance();
-    const data = TemplateProcessor.extractDataFromBooking(variables as any);
+    // Use the SimpleTemplateProcessor for template processing
+    const processor = SimpleTemplateProcessor.getInstance();
+    const data = SimpleTemplateProcessor.extractDataFromBooking(variables as any);
     return processor.processTemplate(content, data);
   }
 
