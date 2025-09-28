@@ -1,0 +1,40 @@
+BOOKING CONFIRMATION - {{confirmationNumber}}
+
+Dear {{customerName}},
+
+Thank you for choosing Airport Shuttle TPA! Your booking has been confirmed and we're excited to serve you.
+
+BOOKING INFORMATION:
+==================
+Confirmation Number: {{confirmationNumber}}
+Pickup Location: {{pickupLocation}}
+Drop-off Location: {{dropoffLocation}}
+Date & Time: {{pickupDate}} at {{pickupTime}}
+Passengers: {{passengers}} {{passengers === '1' ? 'person' : 'people'}}
+Vehicle Type: {{vehicleType}}
+{{#if flightNumber}}Flight Number: {{flightNumber}}{{/if}}
+Total Price: {{totalPrice}}
+
+WHAT'S NEXT?
+============
+Our driver will contact you 30 minutes before pickup time. Please be ready at the designated location.
+
+CONTACT INFORMATION:
+===================
+Phone: {{companyPhone}}
+Email: {{companyEmail}}
+Website: {{companyWebsite}}
+
+{{#if specialInstructions}}
+SPECIAL INSTRUCTIONS:
+====================
+{{specialInstructions}}
+{{/if}}
+
+Thank you for choosing Airport Shuttle TPA!
+
+Best regards,
+The Airport Shuttle TPA Team
+
+---
+This is an automated message. Please do not reply to this email.

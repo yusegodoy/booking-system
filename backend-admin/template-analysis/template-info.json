@@ -1,0 +1,33 @@
+{
+  "name": "Confirmation Final",
+  "type": "confirmation",
+  "subject": "Booking Confirmation - {{confirmationNumber}}",
+  "variables": [
+    "customerName",
+    "customerFirstName",
+    "customerLastName",
+    "customerEmail",
+    "customerPhone",
+    "confirmationNumber",
+    "pickupLocation",
+    "dropoffLocation",
+    "pickupDate",
+    "pickupTime",
+    "passengers",
+    "vehicleType",
+    "totalPrice",
+    "flightNumber",
+    "airportCode",
+    "terminalGate",
+    "specialInstructions",
+    "companyName",
+    "companyPhone",
+    "companyEmail",
+    "companyWebsite"
+  ],
+  "isActive": true,
+  "createdAt": "2025-09-28T17:58:17.208Z",
+  "updatedAt": "2025-09-28T18:06:40.943Z",
+  "htmlLength": 2848,
+  "textLength": 1084
+}
