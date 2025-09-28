@@ -70,7 +70,7 @@ const emailVariableSchema = new Schema<IEmailVariable>({
 
 // Índices para optimizar consultas
 emailVariableSchema.index({ category: 1, isActive: 1 });
-emailVariableSchema.index({ variableName: 1 });
+// variableName ya tiene índice único automático por 'unique: true'
 
 emailVariableSchema.on('index', function(error) {
   if (error) {
