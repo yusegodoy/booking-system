@@ -1,4 +1,4 @@
-import Handlebars from 'handlebars';
+import * as Handlebars from 'handlebars';
 import { IBooking } from '../models/Booking';
 
 export interface TemplateData {
@@ -55,22 +55,13 @@ export class TemplateProcessor {
   }
 
   private registerHelpers(): void {
-    // Helper for conditional display
-    this.handlebars.registerHelper('if', function(conditional, options) {
-      if (conditional) {
-        return options.fn(this);
-      } else {
-        return options.inverse(this);
-      }
-    });
-
     // Helper for pluralization
-    this.handlebars.registerHelper('pluralize', function(count, singular, plural) {
+    this.handlebars.registerHelper('pluralize', (count: any, singular: any, plural: any) => {
       return count === 1 ? singular : plural;
     });
 
     // Helper for formatting currency
-    this.handlebars.registerHelper('currency', function(amount) {
+    this.handlebars.registerHelper('currency', (amount: any) => {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD'
@@ -78,7 +69,7 @@ export class TemplateProcessor {
     });
 
     // Helper for formatting date
-    this.handlebars.registerHelper('formatDate', function(date, format) {
+    this.handlebars.registerHelper('formatDate', (date: any, format: any) => {
       const d = new Date(date);
       if (format === 'long') {
         return d.toLocaleDateString('en-US', {
@@ -92,8 +83,13 @@ export class TemplateProcessor {
     });
 
     // Helper for formatting time
-    this.handlebars.registerHelper('formatTime', function(hour, minute, period) {
+    this.handlebars.registerHelper('formatTime', (hour: any, minute: any, period: any) => {
       return `${hour}:${minute} ${period}`;
+    });
+
+    // Helper for equality comparison
+    this.handlebars.registerHelper('eq', (a: any, b: any) => {
+      return a === b;
     });
   }
 
