@@ -248,7 +248,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                             onClick={() => insertVariable(variable.variableName)}
                             title={`${variable.description} - Insert {{${variable.variableName}}}`}
                           >
-                            <div className="variable-name">{{{variable.variableName}}}</div>
+                            <div className="variable-name">{`{{${variable.variableName}}}`}</div>
                             <div className="variable-description">{variable.description}</div>
                             {variable.exampleValue && (
                               <div className="variable-example">Example: {variable.exampleValue}</div>
