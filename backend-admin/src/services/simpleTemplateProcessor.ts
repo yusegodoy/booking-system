@@ -84,18 +84,15 @@ export class SimpleTemplateProcessor {
       return data.specialInstructions ? content : '';
     });
     
-    // Handle passenger pluralization - multiple patterns
-    const passengerPatterns = [
-      /\{\{passengers\}\} \{\{#if \(eq passengers 1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g,
-      /\{\{passengers\}\} \{\{#if \(eq passengers 1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g,
-      /\{\{passengers\}\} \{\{#if \(eq passengers 1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g
-    ];
+    // Handle passenger pluralization - use a simpler approach
+    // First replace the passengers variable
+    result = result.replace(/\{\{passengers\}\}/g, String(data.passengers));
     
-    passengerPatterns.forEach(pattern => {
-      result = result.replace(pattern, (match) => {
-        const plural = data.passengers === 1 ? 'person' : 'people';
-        return `${data.passengers} ${plural}`;
-      });
+    // Then handle the conditional
+    const conditionalRegex = /\{\{#if\s*\(eq\s*passengers\s*1\)\}\}person\{\{else\}\}people\{\{\/if\}\}/g;
+    result = result.replace(conditionalRegex, (match) => {
+      const plural = data.passengers === 1 ? 'person' : 'people';
+      return plural;
     });
     
     return result;
