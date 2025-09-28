@@ -311,14 +311,14 @@ export const syncAllBookings = async (req: Request, res: Response) => {
     const result = await googleCalendarService.syncAllPendingBookings();
     
     if (result.success) {
-      res.json({ 
+      return res.json({ 
         success: true, 
         message: `Sync completed. ${result.synced} bookings synced, ${result.errors} errors.`,
         synced: result.synced,
         errors: result.errors
       });
     } else {
-      res.status(400).json({ 
+      return res.status(400).json({ 
         success: false, 
         message: result.error 
       });
@@ -334,7 +334,7 @@ export const syncAllBookings = async (req: Request, res: Response) => {
       errorMessage = 'Google Calendar authentication failed. Please reconnect your Google Calendar.';
     }
     
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false, 
       message: errorMessage 
     });
