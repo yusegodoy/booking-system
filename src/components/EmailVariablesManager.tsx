@@ -36,28 +36,43 @@ const EmailVariablesManager: React.FC<EmailVariablesManagerProps> = ({ token }) 
 
   const fetchVariables = async () => {
     try {
+      console.log('🔄 EmailVariablesManager: Starting fetchVariables...');
+      console.log('🔑 Token available:', !!token);
+      console.log('🌐 API_BASE_URL:', API_BASE_URL);
+      
       setLoading(true);
       
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/email/variables/categories`, {
+      const url = `${API_BASE_URL}/email/variables/categories`;
+      console.log('📡 Fetching URL:', url);
+
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
+      console.log('📊 Response status:', response.status);
+      console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('✅ Variables data received:', data);
+      console.log('📊 Number of categories:', Object.keys(data).length);
+      
       setVariables(data);
       setError(null);
     } catch (error) {
-      console.error('Error fetching variables:', error);
+      console.error('❌ Error fetching variables:', error);
       setError(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setLoading(false);
