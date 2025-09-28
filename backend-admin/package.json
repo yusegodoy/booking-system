@@ -25,7 +25,7 @@
     "fix-email-template-names": "ts-node src/scripts/fixEmailTemplateNames.ts",
     "debug-email-templates": "ts-node src/scripts/debugEmailTemplates.ts",
     "populate-email-variables": "ts-node src/scripts/populateEmailVariables.ts",
-    "debug-railway-db": "ts-node src/scripts/debugRailwayDatabase.ts"
+    "populate-test-db": "ts-node src/scripts/populateTestDatabase.ts"
   },
   "keywords": [
     "admin",
