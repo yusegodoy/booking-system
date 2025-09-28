@@ -9,29 +9,46 @@ export class GoogleCalendarService {
   private calendar: any;
 
   constructor() {
-    this.oauth2Client = new google.auth.OAuth2();
+    this.oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5001/api/google-calendar/auth/callback'
+    );
   }
 
   // Initialize the service with configuration
   async initialize() {
     try {
-      const config = await GoogleCalendarConfig.findOne({ isEnabled: true });
-      if (!config) {
-        throw new Error('Google Calendar not configured');
+      // Check if Google OAuth2 credentials are configured
+      if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+        console.error('❌ Google Calendar OAuth2 credentials not configured in environment variables');
+        console.error('   Missing: GOOGLE_CLIENT_ID and/or GOOGLE_CLIENT_SECRET');
+        throw new Error('Google Calendar OAuth2 credentials not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your environment variables.');
       }
 
-             this.oauth2Client.setCredentials({
-         client_id: config.clientId,
-         client_secret: config.clientSecret,
-         refresh_token: config.refreshToken,
-         access_token: config.accessToken,
-         expiry_date: config.tokenExpiry?.getTime()
-       } as any);
+      const config = await GoogleCalendarConfig.findOne({ isEnabled: true });
+      if (!config) {
+        throw new Error('Google Calendar not configured in database');
+      }
+
+      console.log('🔧 Initializing Google Calendar service with credentials');
+      console.log('   - Client ID:', process.env.GOOGLE_CLIENT_ID ? '✅ Present' : '❌ Missing');
+      console.log('   - Client Secret:', process.env.GOOGLE_CLIENT_SECRET ? '✅ Present' : '❌ Missing');
+      console.log('   - Refresh Token:', config.refreshToken ? '✅ Present' : '❌ Missing');
+
+      this.oauth2Client.setCredentials({
+        client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+        client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+        refresh_token: config.refreshToken,
+        access_token: config.accessToken,
+        expiry_date: config.tokenExpiry?.getTime()
+      } as any);
 
       this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
+      console.log('✅ Google Calendar service initialized successfully');
       return true;
     } catch (error) {
-      console.error('Failed to initialize Google Calendar service:', error);
+      console.error('❌ Failed to initialize Google Calendar service:', error);
       return false;
     }
   }

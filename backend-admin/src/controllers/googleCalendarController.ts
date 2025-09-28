@@ -299,6 +299,15 @@ export const getAvailableCalendars = async (req: Request, res: Response) => {
 
 export const syncAllBookings = async (req: Request, res: Response) => {
   try {
+    // Check if Google OAuth2 credentials are configured
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error('❌ Google Calendar OAuth2 credentials not configured');
+      return res.status(400).json({
+        success: false,
+        message: 'Google Calendar OAuth2 credentials not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your environment variables.'
+      });
+    }
+
     const result = await googleCalendarService.syncAllPendingBookings();
     
     if (result.success) {
@@ -315,10 +324,19 @@ export const syncAllBookings = async (req: Request, res: Response) => {
       });
     }
   } catch (error: any) {
-    console.error('Error syncing all bookings:', error);
+    console.error('❌ Error syncing all bookings:', error);
+    
+    // Provide specific error messages based on error type
+    let errorMessage = 'Failed to sync bookings';
+    if (error.message && error.message.includes('Could not determine client ID')) {
+      errorMessage = 'Google Calendar OAuth2 credentials not configured properly';
+    } else if (error.message && error.message.includes('invalid_request')) {
+      errorMessage = 'Google Calendar authentication failed. Please reconnect your Google Calendar.';
+    }
+    
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to sync bookings' 
+      message: errorMessage 
     });
   }
 };
