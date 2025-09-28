@@ -1218,7 +1218,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
               {/* Email Variables Sub-tab */}
               {activeSettingsTab === 'email-variables' && (
                 <div className="email-variables-tab">
-                  <EmailVariablesManager />
+                  <EmailVariablesManager token={token || ''} />
                 </div>
               )}
 

@@ -18,7 +18,11 @@ interface VariablesByCategory {
   [category: string]: EmailVariable[];
 }
 
-const EmailVariablesManager: React.FC = () => {
+interface EmailVariablesManagerProps {
+  token: string;
+}
+
+const EmailVariablesManager: React.FC<EmailVariablesManagerProps> = ({ token }) => {
   const [variables, setVariables] = useState<VariablesByCategory>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,12 +32,11 @@ const EmailVariablesManager: React.FC = () => {
 
   useEffect(() => {
     fetchVariables();
-  }, []);
+  }, [token]);
 
   const fetchVariables = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       if (!token) {
         throw new Error('No authentication token found');
