@@ -95,40 +95,44 @@ export class SimpleTemplateProcessor {
   }
 
   public static extractDataFromBooking(booking: IBooking): TemplateData {
+    // Safely extract user data with fallbacks
+    const userData = booking.userData || {};
+    const tripInfo = booking.tripInfo || {};
+    
     return {
       // Customer info
-      customerName: `${booking.userData.firstName} ${booking.userData.lastName}`,
-      customerFirstName: booking.userData.firstName,
-      customerLastName: booking.userData.lastName,
-      customerEmail: booking.userData.email,
-      customerPhone: booking.userData.phone,
-      specialInstructions: booking.userData.specialInstructions,
+      customerName: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+      customerFirstName: userData.firstName || '',
+      customerLastName: userData.lastName || '',
+      customerEmail: userData.email || '',
+      customerPhone: userData.phone || '',
+      specialInstructions: userData.specialInstructions || undefined,
       
       // Booking info
-      confirmationNumber: booking.outboundConfirmationNumber,
-      returnConfirmationNumber: booking.returnConfirmationNumber,
+      confirmationNumber: booking.outboundConfirmationNumber || '',
+      returnConfirmationNumber: booking.returnConfirmationNumber || undefined,
       
       // Trip info
-      pickupLocation: booking.tripInfo.pickup,
-      dropoffLocation: booking.tripInfo.dropoff,
-      pickupDate: new Date(booking.tripInfo.date).toLocaleDateString('en-US', {
+      pickupLocation: tripInfo.pickup || '',
+      dropoffLocation: tripInfo.dropoff || '',
+      pickupDate: tripInfo.date ? new Date(tripInfo.date).toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-      }),
-      pickupTime: `${booking.tripInfo.pickupHour}:${booking.tripInfo.pickupMinute} ${booking.tripInfo.pickupPeriod}`,
-      passengers: booking.tripInfo.passengers,
-      flightNumber: booking.tripInfo.flight || undefined,
-      airportCode: booking.tripInfo.airportCode || undefined,
-      terminalGate: booking.tripInfo.terminalGate || undefined,
+      }) : '',
+      pickupTime: `${tripInfo.pickupHour || ''}:${tripInfo.pickupMinute || ''} ${tripInfo.pickupPeriod || ''}`,
+      passengers: tripInfo.passengers || 1,
+      flightNumber: tripInfo.flight && tripInfo.flight.trim() !== '' ? tripInfo.flight : undefined,
+      airportCode: tripInfo.airportCode || undefined,
+      terminalGate: tripInfo.terminalGate || undefined,
       
       // Vehicle info
       vehicleType: booking.vehicleType || 'Standard Vehicle',
       assignedVehicle: booking.assignedVehicle ? String(booking.assignedVehicle) : undefined,
       
       // Pricing
-      totalPrice: `$${booking.totalPrice.toFixed(2)}`,
+      totalPrice: `$${(booking.totalPrice || 0).toFixed(2)}`,
       
       // Company info
       companyName: 'Airport Shuttle TPA',
