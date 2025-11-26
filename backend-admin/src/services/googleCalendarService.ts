@@ -55,7 +55,23 @@ export class GoogleCalendarService {
 
   // Create or update event in Google Calendar
   async syncBookingToCalendar(booking: IBooking): Promise<{ success: boolean; eventId?: string; error?: string }> {
+    const bookingId = (booking._id as any)?.toString() || 'unknown';
+    const confirmationNumber = booking.outboundConfirmationNumber || 'N/A';
+    
     try {
+      // Validate required booking data
+      if (!booking.tripInfo || !booking.tripInfo.date) {
+        throw new Error('Booking missing required tripInfo.date');
+      }
+      
+      if (!booking.tripInfo.pickupHour || !booking.tripInfo.pickupMinute || !booking.tripInfo.pickupPeriod) {
+        throw new Error('Booking missing required pickup time information');
+      }
+      
+      if (!booking.userData) {
+        throw new Error('Booking missing required userData');
+      }
+
       if (!this.calendar) {
         await this.initialize();
       }
@@ -71,6 +87,8 @@ export class GoogleCalendarService {
       let eventId = booking.googleCalendarEventId;
       let result;
 
+      console.log(`🔄 Syncing booking ${confirmationNumber} (${bookingId}) to Google Calendar...`);
+
       if (eventId) {
         // Update existing event
         result = await this.calendar.events.update({
@@ -78,6 +96,7 @@ export class GoogleCalendarService {
           eventId: eventId,
           requestBody: eventData
         });
+        console.log(`✅ Updated event ${eventId} for booking ${confirmationNumber}`);
       } else {
         // Create new event
         result = await this.calendar.events.insert({
@@ -85,6 +104,7 @@ export class GoogleCalendarService {
           requestBody: eventData
         });
         eventId = result.data.id;
+        console.log(`✅ Created event ${eventId} for booking ${confirmationNumber}`);
       }
 
              // Update booking with sync status
@@ -97,16 +117,18 @@ export class GoogleCalendarService {
 
       return { success: true, eventId };
     } catch (error: any) {
-      console.error('Failed to sync booking to Google Calendar:', error);
+      const errorMessage = error.message || 'Unknown error';
+      console.error(`❌ Failed to sync booking ${confirmationNumber} (${bookingId}) to Google Calendar:`, errorMessage);
+      console.error(`   Error details:`, error);
       
              // Update booking with error status
        await Booking.findByIdAndUpdate((booking._id as any), {
          googleCalendarSyncStatus: 'error',
          googleCalendarLastSync: new Date(),
-         googleCalendarError: error.message
+         googleCalendarError: errorMessage
        });
 
-      return { success: false, error: error.message };
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -152,9 +174,9 @@ export class GoogleCalendarService {
     const [year, month, day] = booking.tripInfo.date.split('-').map(Number);
     const pickupDate = new Date(year, month - 1, day); // month is 0-indexed
     
-    const pickupHour = parseInt(booking.tripInfo.pickupHour);
-    const pickupMinute = parseInt(booking.tripInfo.pickupMinute);
-    const isPM = booking.tripInfo.pickupPeriod === 'PM';
+    const pickupHour = parseInt(booking.tripInfo.pickupHour || '0');
+    const pickupMinute = parseInt(booking.tripInfo.pickupMinute || '0');
+    const isPM = (booking.tripInfo.pickupPeriod || '').toUpperCase() === 'PM';
     
     const startTime = new Date(pickupDate);
     startTime.setHours(
@@ -166,14 +188,16 @@ export class GoogleCalendarService {
     const endTime = new Date(startTime);
     endTime.setHours(endTime.getHours() + 2); // Default 2 hours duration
 
-    // Generate title using template
-    const title = this.generateEventTitle(booking, config.eventTitleTemplate);
+    // Generate title using template (with fallback)
+    const titleTemplate = config.eventTitleTemplate || '🚗 {{customerName}} - {{pickupAddress}} to {{dropoffAddress}}';
+    const title = this.generateEventTitle(booking, titleTemplate);
     
     // Generate description based on configuration
-    const description = this.generateEventDescription(booking, config.eventFields);
+    const description = this.generateEventDescription(booking, config.eventFields || {});
     
-    // Generate location using template
-    const location = this.generateEventLocation(booking, config.eventLocationTemplate);
+    // Generate location using template (with fallback)
+    const locationTemplate = config.eventLocationTemplate || '{{pickupAddress}} to {{dropoffAddress}}';
+    const location = this.generateEventLocation(booking, locationTemplate);
 
     const eventData: any = {
       summary: title,
@@ -197,10 +221,13 @@ export class GoogleCalendarService {
       }
     };
 
-    // Add attendees if configured
-    if (config.includeAttendees) {
+    // Add attendees if configured and email exists
+    if (config.includeAttendees && booking.userData?.email) {
+      const firstName = booking.userData.firstName || '';
+      const lastName = booking.userData.lastName || '';
+      const displayName = `${firstName} ${lastName}`.trim() || 'Customer';
       eventData.attendees = [
-        { email: booking.userData.email, displayName: `${booking.userData.firstName} ${booking.userData.lastName}` }
+        { email: booking.userData.email, displayName: displayName }
       ];
     }
 
@@ -220,16 +247,22 @@ export class GoogleCalendarService {
 
   // Generate event title using template
   private generateEventTitle(booking: IBooking, template: string): string {
+    const firstName = booking.userData?.firstName || '';
+    const lastName = booking.userData?.lastName || '';
+    const customerName = `${firstName} ${lastName}`.trim() || 'Customer';
+    
     const replacements: { [key: string]: string } = {
-      '{{customerName}}': `${booking.userData.firstName} ${booking.userData.lastName}`,
-      '{{pickupAddress}}': booking.tripInfo.pickup,
-      '{{dropoffAddress}}': booking.tripInfo.dropoff,
-      '{{confirmationNumber}}': booking.outboundConfirmationNumber,
-      '{{vehicleType}}': booking.vehicleType || 'Not assigned',
-      '{{totalPrice}}': `$${booking.totalPrice}`,
-      '{{date}}': booking.tripInfo.date,
-      '{{time}}': `${booking.tripInfo.pickupHour}:${booking.tripInfo.pickupMinute} ${booking.tripInfo.pickupPeriod}`,
-      '{{flight}}': booking.tripInfo.flight || 'N/A'
+      '{{customerName}}': customerName,
+      '{{pickupAddress}}': booking.tripInfo?.pickup || 'Pickup location not specified',
+      '{{dropoffAddress}}': booking.tripInfo?.dropoff || 'Dropoff location not specified',
+      '{{confirmationNumber}}': booking.outboundConfirmationNumber || 'N/A',
+      '{{vehicleType}}': booking.vehicleType || (booking.assignedVehicle ? String(booking.assignedVehicle) : null) || 'Not assigned',
+      '{{totalPrice}}': booking.totalPrice ? `$${booking.totalPrice}` : 'N/A',
+      '{{date}}': booking.tripInfo?.date || 'N/A',
+      '{{time}}': booking.tripInfo?.pickupHour && booking.tripInfo?.pickupMinute && booking.tripInfo?.pickupPeriod 
+        ? `${booking.tripInfo.pickupHour}:${booking.tripInfo.pickupMinute} ${booking.tripInfo.pickupPeriod}` 
+        : 'N/A',
+      '{{flight}}': booking.tripInfo?.flight || 'N/A'
     };
 
     let title = template;
@@ -242,12 +275,16 @@ export class GoogleCalendarService {
 
   // Generate event location using template
   private generateEventLocation(booking: IBooking, template: string): string {
-    const replacements: { [key: string]: string } = {
-      '{{pickupAddress}}': booking.tripInfo.pickup,
-      '{{dropoffAddress}}': booking.tripInfo.dropoff,
-      '{{customerName}}': `${booking.userData.firstName} ${booking.userData.lastName}`,
-      '{{confirmationNumber}}': booking.outboundConfirmationNumber
-    };
+    const firstName = booking.userData?.firstName || '';
+    const lastName = booking.userData?.lastName || '';
+    const customerName = `${firstName} ${lastName}`.trim() || 'Customer';
+    
+      const replacements: { [key: string]: string } = {
+        '{{pickupAddress}}': booking.tripInfo?.pickup || 'Pickup location not specified',
+        '{{dropoffAddress}}': booking.tripInfo?.dropoff || 'Dropoff location not specified',
+        '{{customerName}}': customerName,
+        '{{confirmationNumber}}': (booking.outboundConfirmationNumber?.toString() || 'N/A')
+      };
 
     let location = template;
     Object.entries(replacements).forEach(([placeholder, value]) => {
@@ -260,57 +297,72 @@ export class GoogleCalendarService {
   // Generate event description based on configuration
   private generateEventDescription(booking: IBooking, eventFields: any): string {
     const lines: string[] = [];
+    const userData = booking.userData || {};
+    const tripInfo = booking.tripInfo || {};
 
     if (eventFields.confirmationNumber) {
-      lines.push(`📋 Confirmation: ${booking.outboundConfirmationNumber}`);
+      lines.push(`📋 Confirmation: ${booking.outboundConfirmationNumber || 'N/A'}`);
     }
     if (eventFields.customerName) {
-      lines.push(`👤 Customer: ${booking.userData.firstName} ${booking.userData.lastName}`);
+      const firstName = userData.firstName || '';
+      const lastName = userData.lastName || '';
+      const customerName = `${firstName} ${lastName}`.trim() || 'Customer';
+      lines.push(`👤 Customer: ${customerName}`);
     }
-    if (eventFields.customerEmail) {
-      lines.push(`📧 Email: ${booking.userData.email}`);
+    if (eventFields.customerEmail && userData.email) {
+      lines.push(`📧 Email: ${userData.email}`);
     }
-    if (eventFields.customerPhone) {
-      lines.push(`📞 Phone: ${booking.userData.phone}`);
+    if (eventFields.customerPhone && userData.phone) {
+      lines.push(`📞 Phone: ${userData.phone}`);
     }
-    if (eventFields.passengers) {
-      lines.push(`👥 Passengers: ${booking.tripInfo.passengers}`);
+    if (eventFields.passengers && tripInfo.passengers) {
+      lines.push(`👥 Passengers: ${tripInfo.passengers}`);
     }
-    if (eventFields.luggage) {
-      lines.push(`🛄 Luggage: ${booking.tripInfo.checkedLuggage} checked, ${booking.tripInfo.carryOn} carry-on`);
+    if (eventFields.luggage && (tripInfo.checkedLuggage || tripInfo.carryOn)) {
+      const checked = tripInfo.checkedLuggage || 0;
+      const carryOn = tripInfo.carryOn || 0;
+      lines.push(`🛄 Luggage: ${checked} checked, ${carryOn} carry-on`);
     }
     if (eventFields.vehicleType) {
-      lines.push(`🚗 Vehicle: ${booking.vehicleType || 'Not assigned'}`);
+      lines.push(`🚗 Vehicle: ${booking.vehicleType || (booking.assignedVehicle ? String(booking.assignedVehicle) : null) || 'Not assigned'}`);
     }
-    if (eventFields.totalPrice) {
+    if (eventFields.totalPrice && booking.totalPrice) {
       lines.push(`💰 Total: $${booking.totalPrice}`);
     }
-    if (eventFields.date) {
-      lines.push(`📅 Date: ${booking.tripInfo.date}`);
+    if (eventFields.date && tripInfo.date) {
+      lines.push(`📅 Date: ${tripInfo.date}`);
     }
-    if (eventFields.time) {
-      lines.push(`⏰ Time: ${booking.tripInfo.pickupHour}:${booking.tripInfo.pickupMinute} ${booking.tripInfo.pickupPeriod}`);
+    if (eventFields.time && tripInfo.pickupHour && tripInfo.pickupMinute && tripInfo.pickupPeriod) {
+      lines.push(`⏰ Time: ${tripInfo.pickupHour}:${tripInfo.pickupMinute} ${tripInfo.pickupPeriod}`);
     }
-    if (eventFields.flight) {
-      lines.push(`✈️ Flight: ${booking.tripInfo.flight || 'N/A'}`);
+    if (eventFields.flight && tripInfo.flight) {
+      lines.push(`✈️ Flight: ${tripInfo.flight}`);
     }
     if (eventFields.roundTrip) {
-      lines.push(`🔄 Round Trip: ${booking.tripInfo.roundTrip ? 'Yes' : 'No'}`);
+      lines.push(`🔄 Round Trip: ${tripInfo.roundTrip ? 'Yes' : 'No'}`);
     }
 
-    if (eventFields.returnDate && booking.tripInfo.roundTrip && booking.tripInfo.returnDate) {
-      lines.push(`🛬 Return: ${booking.tripInfo.returnDate} at ${booking.tripInfo.returnHour}:${booking.tripInfo.returnMinute} ${booking.tripInfo.returnPeriod}`);
+    if (eventFields.returnDate && tripInfo.roundTrip && tripInfo.returnDate) {
+      const returnTime = tripInfo.returnHour && tripInfo.returnMinute && tripInfo.returnPeriod
+        ? ` at ${tripInfo.returnHour}:${tripInfo.returnMinute} ${tripInfo.returnPeriod}`
+        : '';
+      lines.push(`🛬 Return: ${tripInfo.returnDate}${returnTime}`);
     }
-    if (eventFields.returnFlight && booking.tripInfo.roundTrip && booking.tripInfo.returnFlight) {
-      lines.push(`✈️ Return Flight: ${booking.tripInfo.returnFlight || 'N/A'}`);
+    if (eventFields.returnFlight && tripInfo.roundTrip && tripInfo.returnFlight) {
+      lines.push(`✈️ Return Flight: ${tripInfo.returnFlight}`);
     }
 
-    if (eventFields.specialInstructions && booking.userData.specialInstructions) {
-      lines.push(`📝 Special Instructions: ${booking.userData.specialInstructions}`);
+    if (eventFields.specialInstructions && userData.specialInstructions) {
+      lines.push(`📝 Special Instructions: ${userData.specialInstructions}`);
     }
 
-    if (eventFields.childSeats && (booking.tripInfo.infantSeats > 0 || booking.tripInfo.toddlerSeats > 0 || booking.tripInfo.boosterSeats > 0)) {
-      lines.push(`👶 Child Seats: ${booking.tripInfo.infantSeats} infant, ${booking.tripInfo.toddlerSeats} toddler, ${booking.tripInfo.boosterSeats} booster`);
+    if (eventFields.childSeats && tripInfo) {
+      const infantSeats = tripInfo.infantSeats || 0;
+      const toddlerSeats = tripInfo.toddlerSeats || 0;
+      const boosterSeats = tripInfo.boosterSeats || 0;
+      if (infantSeats > 0 || toddlerSeats > 0 || boosterSeats > 0) {
+        lines.push(`👶 Child Seats: ${infantSeats} infant, ${toddlerSeats} toddler, ${boosterSeats} booster`);
+      }
     }
 
     return lines.join('\n');
@@ -363,11 +415,21 @@ export class GoogleCalendarService {
       let errors = 0;
 
       for (const booking of pendingBookings) {
-        const result = await this.syncBookingToCalendar(booking);
-        if (result.success) {
-          synced++;
-        } else {
+        const bookingId = (booking._id as any)?.toString() || 'unknown';
+        const confirmationNumber = booking.outboundConfirmationNumber || 'N/A';
+        
+        try {
+          const result = await this.syncBookingToCalendar(booking);
+          if (result.success) {
+            synced++;
+            console.log(`✅ Successfully synced booking ${confirmationNumber} (${bookingId})`);
+          } else {
+            errors++;
+            console.error(`❌ Failed to sync booking ${confirmationNumber} (${bookingId}): ${result.error}`);
+          }
+        } catch (error: any) {
           errors++;
+          console.error(`❌ Exception syncing booking ${confirmationNumber} (${bookingId}):`, error.message);
         }
       }
 
