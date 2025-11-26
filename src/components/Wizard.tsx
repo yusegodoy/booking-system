@@ -9,6 +9,7 @@ import { useGlobalRouteCalculation } from '../hooks/useGlobalRouteCalculation';
 interface WizardProps {
   onOpenDashboard: () => void;
   onOpenLoginModal: () => void;
+  embedded?: boolean;
   wizardState: {
     currentStep: number;
     tripInfo: {
@@ -89,7 +90,7 @@ const DEFAULT_ZOOM = 12;
 const requiredTripFields = ['date', 'pickupHour', 'pickupMinute', 'pickupPeriod', 'pickup', 'dropoff', 'passengers'];
 const requiredReturnFields = ['returnDate', 'returnHour', 'returnMinute', 'returnPeriod'];
 
-const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wizardState, updateWizardState }) => {
+const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wizardState, updateWizardState, embedded = false }) => {
     // Global route calculation hook
   const { routeInfo, isCalculating, calculateRoute, clearRoute } = useGlobalRouteCalculation();
   
@@ -2440,13 +2441,13 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
   }
 
   return (
-    <div className="wizard-container" style={{position: 'relative'}}>
+    <div className="wizard-container" style={{position: 'relative', width: '100%', height: '100%'}}>
       {/* Barra superior de botones */}
       <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
+        position: embedded ? 'absolute' : 'fixed',
+        top: embedded ? 0 : 0,
+        left: embedded ? 0 : 0,
+        width: embedded ? '100%' : '100vw',
         background: '#fff',
         zIndex: 2000,
         display: 'flex',

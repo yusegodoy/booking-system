@@ -11,7 +11,11 @@ import { GoogleMapsProvider } from './contexts/GoogleMapsContext';
 
 // Remove TripInfo and UserData interfaces
 
-function App() {
+interface AppProps {
+  embedded?: boolean;
+}
+
+function App({ embedded = false }: AppProps = {}) {
   const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
   const [showDashboard, setShowDashboard] = useState(false);
   // New state for login modal
@@ -98,6 +102,7 @@ function App() {
             onOpenLoginModal={() => { setAuthScreen('login'); setShowLoginModal(true); }}
             wizardState={wizardState}
             updateWizardState={updateWizardState}
+            embedded={embedded}
           />
           {/* Button to access admin portal */}
           <button 
