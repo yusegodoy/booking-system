@@ -1,8 +1,0 @@
-export const DEFAULT_LOGO_BASE64 = [
-  'iVBORw0KGgoAAAANSUhEUgAAA4wAAALYCAYAAAA3onz3AAAACXBIWXMAAB7CAAAewgFu0HU+AAAIiGlUWHRYTUw6Y29tLmFkb2Jl',
-  'LnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78i iglkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4',
-  'bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgOS4xLWMwMDMgNzkuOTY5MGE4NywgMjAyNS8w',
-  "03 above... (rest of file omitted for brevity)",
-  '/g/oAbdS2x9HqQAAAABJRU5ErkJggg==',
-].join('');
-export const DEFAULT_LOGO_DATA_URL = `data:image/png;base64,${DEFAULT_LOGO_BASE64}`;
