@@ -325,7 +325,7 @@ export const createBooking = async (req: Request, res: Response) => {
     // Send automatic emails if configured
     try {
       const EmailConfig = (await import('../models/EmailConfig')).EmailConfig;
-      const resendEmailService = (await import('../services/resendEmailService')).default;
+      const { resendEmailService } = await import('../services/resendEmailService');
       
       const emailConfig = await EmailConfig.findOne({ isActive: true });
       
