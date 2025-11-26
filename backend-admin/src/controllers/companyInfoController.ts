@@ -163,7 +163,10 @@ export const companyInfoController = {
 
       // Delete old logo if exists
       if (companyInfo.logoUrl) {
-        const oldLogoPath = path.join(__dirname, '../../public', companyInfo.logoUrl);
+        const previousRelativePath = companyInfo.logoUrl.startsWith('/')
+          ? companyInfo.logoUrl.substring(1)
+          : companyInfo.logoUrl;
+        const oldLogoPath = path.join(__dirname, '../../', previousRelativePath);
         if (fs.existsSync(oldLogoPath)) {
           fs.unlinkSync(oldLogoPath);
         }
@@ -186,6 +189,53 @@ export const companyInfoController = {
     }
   },
 
+  // Public endpoint to retrieve the company logo image
+  async getLogoImage(req: Request, res: Response) {
+    try {
+      const companyInfo = await CompanyInfo.findOne({ isActive: true });
+
+      if (!companyInfo || !companyInfo.logoUrl) {
+        return res.status(404).json({ message: 'Logo not found' });
+      }
+
+      const relativePath = companyInfo.logoUrl.startsWith('/')
+        ? companyInfo.logoUrl.substring(1)
+        : companyInfo.logoUrl;
+
+      const logoPath = path.join(__dirname, '../../', relativePath);
+
+      if (!fs.existsSync(logoPath)) {
+        return res.status(404).json({ message: 'Logo file not found' });
+      }
+
+      const extension = path.extname(logoPath).toLowerCase();
+      const contentTypeMap: Record<string, string> = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp'
+      };
+
+      const contentType = contentTypeMap[extension] || 'application/octet-stream';
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+
+      const stream = fs.createReadStream(logoPath);
+      stream.on('error', (error) => {
+        console.error('Error streaming logo image:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ message: 'Error reading logo file' });
+        }
+      });
+      return stream.pipe(res);
+    } catch (error) {
+      console.error('Error retrieving logo image:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  },
+
   // Delete logo
   async deleteLogo(req: Request, res: Response) {
     try {
@@ -195,7 +245,10 @@ export const companyInfoController = {
       }
 
       if (companyInfo.logoUrl) {
-        const logoPath = path.join(__dirname, '../../public', companyInfo.logoUrl);
+        const relativePath = companyInfo.logoUrl.startsWith('/')
+          ? companyInfo.logoUrl.substring(1)
+          : companyInfo.logoUrl;
+        const logoPath = path.join(__dirname, '../../', relativePath);
         if (fs.existsSync(logoPath)) {
           fs.unlinkSync(logoPath);
         }

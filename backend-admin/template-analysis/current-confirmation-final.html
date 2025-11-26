@@ -1,1 +1,162 @@
-<h1>Booking Confirmation🚗 Airport Shuttle TPA</h1><p>Your trusted transportation partner</p><p>✅ Booking Confirmed Dear {{customerName}},</p><p>Thank you for choosing Airport Shuttle TPA! Your booking has been confirmed and we're excited to serve you.</p><h3>📋 Booking Information</h3><p>Confirmation Number:</p><p><strong>{{confirmationNumber}}</strong></p><p>Pickup Location:</p><p>{{pickupLocation}}</p><p>Drop-off Location:</p><p>{{dropoffLocation}}</p><p>Date &amp; Time:</p><p>{{pickupDate}} at {{pickupTime}}</p><p>Passengers:</p><p>{{passengers}}</p><p>Vehicle Type:</p><p>{{vehicleType}}</p><p>Flight Info:</p><p>{{flightNumber}}</p><p>Total Price:</p><p><strong style="color: rgb(40, 167, 69);"> ${{totalPrice}}</strong></p><p><br></p><h4>🎯 What's Next?</h4><p>Our driver will contact you 30 minutes before pickup time. Please be ready at the designated location.</p><p><br></p><h4>📞 Need Help?</h4><p>📱</p><p>Phone: {{companyPhone}}</p><p>✉️</p><p>Email: {{companyEmail}}</p><p>🌐</p><p>Website: {{companyWebsite}}</p><p>{{#if specialInstructions}}</p><p><br></p><h4>📝 Special Instructions:</h4><p>{{specialInstructions}}</p><p><br></p><p><strong>Important Notes:</strong></p><ul><li><strong>Driver Assignment:</strong> Your driver will be assigned the night before your trip and will contact you upon arrival.</li><li><strong>Notifications:</strong> You’ll receive SMS and email updates (tracking link included).</li><li><strong>Airport Pick-Up:</strong> Curbside pick-up by default; “meet &amp; greet” inside baggage claim available upon request. International travelers can use WhatsApp (free Wi-Fi at TPA).</li><li><strong>Payments:</strong> Credit cards are charged 24h prior to the trip (receipt by email). Cash also accepted. To update a card, request a secure payment link.</li><li><strong>Gratuities:</strong> Not included. Tips are optional (cash or card).</li><li><strong>Cancellations:</strong></li><li class="ql-indent-1">Free if made ≥24h before.</li><li class="ql-indent-1">50% fee if within 24h (unless due to flight cancellation → full refund).</li><li><strong>Flights:</strong> We track your flight and adjust pick-up time when possible, but punctuality of new times is not guaranteed.</li><li><strong>Children:</strong> Guests must provide an approved car seat or rent one for $5 (infant, toddler, booster).</li><li><strong>Pets:</strong> Allowed with prior notice; cleaning fees may apply.</li><li><strong>Pick-Up Times:</strong> Times are estimates and may vary due to traffic or weather. No refunds for delays.</li></ul><p><br></p><p><strong>Airport Shuttle TPA</strong></p><p>Professional Transportation Services</p><p><a href="{{companyWebsite}}" rel="noopener noreferrer" target="_blank">Visit our website</a> | <a href="mailto:{{companyEmail}}" rel="noopener noreferrer" target="_blank">Contact us</a></p>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking Confirmation {{confirmationNumber}}</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff;">
+      <tr>
+        <td align="center" style="padding:24px 16px;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background-color:#ffffff;border:1px solid #e6e6e6;border-radius:10px;overflow:hidden;">
+            <tr>
+              <td style="padding:24px 24px 16px 24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align:middle;">
+                      <img src="{{logoUrl}}" alt="{{companyName}}" style="display:block;height:48px;max-width:180px;object-fit:contain;" />
+                    </td>
+                    <td style="text-align:right;font-size:14px;color:#6b7280;vertical-align:middle;">
+                      <div style="margin-bottom:4px;">Confirmation #{{confirmationNumber}}</div>
+                      <div style="font-weight:600;color:#1f2937;{{#if primaryColor}}color: {{primaryColor}};{{/if}}">{{companyName}}</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 24px 16px 24px;">
+                <h1 style="margin:0 0 12px 0;font-size:24px;color:#111827;">Your ride is confirmed</h1>
+                <p style="margin:0;font-size:15px;line-height:22px;color:#4b5563;">
+                  Hi {{customerFirstName}}, thank you for booking with {{companyName}}. Below you will find a quick overview of your upcoming trip.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 24px 8px 24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+                  <tr>
+                    <td style="width:50%;padding:12px 12px 12px 0;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Pickup</div>
+                      <div style="color:#4b5563;line-height:20px;">{{pickupLocation}}</div>
+                    </td>
+                    <td style="width:50%;padding:12px 0 12px 12px;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Drop-off</div>
+                      <div style="color:#4b5563;line-height:20px;">{{dropoffLocation}}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="width:50%;padding:12px 12px 12px 0;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Date</div>
+                      <div style="color:#4b5563;">{{pickupDate}}</div>
+                    </td>
+                    <td style="width:50%;padding:12px 0 12px 12px;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Pickup Time</div>
+                      <div style="color:#4b5563;">{{pickupTime}}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="width:50%;padding:12px 12px 12px 0;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Passengers</div>
+                      <div style="color:#4b5563;">{{passengers}}</div>
+                    </td>
+                    <td style="width:50%;padding:12px 0 12px 12px;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Vehicle</div>
+                      <div style="color:#4b5563;">{{vehicleType}}</div>
+                    </td>
+                  </tr>
+                  {{#if flightNumber}}
+                  <tr>
+                    <td style="padding:12px 12px 12px 0;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Flight</div>
+                      <div style="color:#4b5563;">{{flightNumber}}</div>
+                    </td>
+                    <td style="padding:12px 0 12px 12px;font-size:14px;border-top:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Airport Code</div>
+                      <div style="color:#4b5563;">{{airportCode}}</div>
+                    </td>
+                  </tr>
+                  {{/if}}
+                  <tr>
+                    <td style="padding:12px 12px 12px 0;font-size:14px;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Total</div>
+                      <div style="color:#111827;font-weight:700;">{{totalPrice}}</div>
+                    </td>
+                    <td style="padding:12px 0 12px 12px;font-size:14px;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;">
+                      <div style="font-weight:600;color:#111827;">Reservation</div>
+                      <div style="color:#4b5563;">{{confirmationNumber}}</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            {{#if specialInstructions}}
+            <tr>
+              <td style="padding:16px 24px 0 24px;">
+                <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px;">Special Instructions</div>
+                <div style="font-size:14px;line-height:20px;color:#4b5563;">{{specialInstructions}}</div>
+              </td>
+            </tr>
+            {{/if}}
+
+            <tr>
+              <td style="padding:16px 24px 0 24px;">
+                <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px;">Important Notes</div>
+                <ul style="padding-left:18px;margin:0;font-size:14px;line-height:20px;color:#4b5563;">
+                  <li style="margin-bottom:6px;">Your driver details will be confirmed the evening before your trip.</li>
+                  <li style="margin-bottom:6px;">You will receive SMS and email notifications with live updates.</li>
+                  <li style="margin-bottom:6px;">Airport pick-up is curbside by default. Meet &amp; greet is available upon request.</li>
+                  <li style="margin-bottom:6px;">Credit cards are charged 24 hours prior to the ride. Receipts are emailed automatically.</li>
+                  <li style="margin-bottom:6px;">Please let us know in advance about child seats or pets so we can prepare accordingly.</li>
+                  <li style="margin-bottom:0;">Cancellations with 24+ hours notice are free. Flight-related cancellations receive a full refund.</li>
+                </ul>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:20px 24px 16px 24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f0f0f0;border-radius:8px;">
+                  <tr>
+                    <td style="width:33.33%;padding:16px;text-align:center;border-right:1px solid #f0f0f0;font-size:13px;color:#4b5563;">
+                      <div style="font-weight:600;color:#111827;margin-bottom:4px;">Call Us</div>
+                      <a href="tel:{{companyPhone}}" style="color:#1d4ed8;{{#if primaryColor}}color: {{primaryColor}};{{/if}}text-decoration:none;">{{companyPhone}}</a>
+                    </td>
+                    <td style="width:33.33%;padding:16px;text-align:center;border-right:1px solid #f0f0f0;font-size:13px;color:#4b5563;">
+                      <div style="font-weight:600;color:#111827;margin-bottom:4px;">Email</div>
+                      <a href="mailto:{{companyEmail}}" style="color:#1d4ed8;{{#if primaryColor}}color: {{primaryColor}};{{/if}}text-decoration:none;">{{companyEmail}}</a>
+                    </td>
+                    <td style="width:33.33%;padding:16px;text-align:center;font-size:13px;color:#4b5563;">
+                      <div style="font-weight:600;color:#111827;margin-bottom:4px;">Website</div>
+                      <a href="{{companyWebsite}}" style="color:#1d4ed8;{{#if primaryColor}}color: {{primaryColor}};{{/if}}text-decoration:none;">{{companyWebsite}}</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 24px 24px 24px;">
+                <p style="margin:0;font-size:13px;line-height:20px;color:#6b7280;">
+                  Need to update your reservation? Reply to this email or call us and we will be happy to help.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:16px 24px 24px 24px;background-color:#f9fafb;border-top:1px solid #e6e6e6;">
+                <div style="font-size:13px;color:#6b7280;line-height:20px;text-align:center;">
+                  Airport Shuttle TPA &bull; Tampa, FL USA<br />
+                  Operating hours: 24/7 &nbsp;&middot;&nbsp; Emergency: +1 (305) 484-4910
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

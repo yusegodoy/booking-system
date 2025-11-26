@@ -1,40 +1,36 @@
-BOOKING CONFIRMATION - {{confirmationNumber}}
+Booking Confirmation – {{companyName}}
 
-Dear {{customerName}},
+Hi {{customerFirstName}},
 
-Thank you for choosing Airport Shuttle TPA! Your booking has been confirmed and we're excited to serve you.
+Thank you for choosing {{companyName}}. Your ride is confirmed and here are the details:
 
-BOOKING INFORMATION:
-==================
-Confirmation Number: {{confirmationNumber}}
-Pickup Location: {{pickupLocation}}
-Drop-off Location: {{dropoffLocation}}
-Date & Time: {{pickupDate}} at {{pickupTime}}
-Passengers: {{passengers}} {{passengers === '1' ? 'person' : 'people'}}
-Vehicle Type: {{vehicleType}}
-{{#if flightNumber}}Flight Number: {{flightNumber}}{{/if}}
-Total Price: {{totalPrice}}
+Confirmation: {{confirmationNumber}}
+Pickup: {{pickupLocation}}
+Drop-off: {{dropoffLocation}}
+Date: {{pickupDate}}
+Pickup time: {{pickupTime}}
+Passengers: {{passengers}}
+Vehicle: {{vehicleType}}
+{{#if flightNumber}}Flight: {{flightNumber}}
+{{/if}}Total: {{totalPrice}}
 
-WHAT'S NEXT?
-============
-Our driver will contact you 30 minutes before pickup time. Please be ready at the designated location.
+{{#if specialInstructions}}Special instructions:
+{{specialInstructions}}
 
-CONTACT INFORMATION:
-===================
+{{/if}}Important notes:
+- Driver information is shared the evening prior to your trip.
+- SMS and email notifications keep you updated in real time.
+- Curbside pickup is standard; meet & greet is available on request.
+- Cards are charged 24 hours before the ride and receipts are emailed automatically.
+- Let us know in advance if you need child seats or will travel with pets.
+- Cancellations with 24+ hours notice are free. Flight-related cancellations receive a full refund.
+
+Need assistance?
 Phone: {{companyPhone}}
 Email: {{companyEmail}}
 Website: {{companyWebsite}}
 
-{{#if specialInstructions}}
-SPECIAL INSTRUCTIONS:
-====================
-{{specialInstructions}}
-{{/if}}
-
-Thank you for choosing Airport Shuttle TPA!
-
-Best regards,
-The Airport Shuttle TPA Team
-
----
-This is an automated message. Please do not reply to this email.
+Airport Shuttle TPA
+Tampa, FL USA
+Operating hours: 24/7
+Emergency contact: +1 (305) 484-4910

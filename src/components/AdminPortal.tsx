@@ -380,6 +380,9 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
     setShowBookingEditor(false);
     setSelectedBooking(null);
     
+    // Wait a moment to ensure backend has processed the deletion
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     // Refresh the data to update the calendar and reservations list
     if (token) {
       await fetchData(token);

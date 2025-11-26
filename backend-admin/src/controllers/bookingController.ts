@@ -3,11 +3,18 @@ import { Booking } from '../models/Booking';
 import { User } from '../models/User';
 import { Customer } from '../models/Customer';
 import { GlobalVariablesService } from '../services/globalVariablesService';
+import googleCalendarService from '../services/googleCalendarService';
 
 // Get all bookings (excluding deleted ones)
 export const getAllBookings = async (req: Request, res: Response) => {
   try {
-    const bookings = await Booking.find({ isDeleted: { $ne: true } })
+    // Explicitly filter out deleted bookings
+    const bookings = await Booking.find({ 
+      $or: [
+        { isDeleted: false },
+        { isDeleted: { $exists: false } }
+      ]
+    })
       // .populate('userId', 'firstName lastName email') // No existe userId, así que quitamos el populate
       .sort({ createdAt: -1 });
 
@@ -118,7 +125,26 @@ export const updateBooking = async (req: Request, res: Response) => {
 // Soft delete a booking (move to trash)
 export const deleteBooking = async (req: Request, res: Response) => {
   try {
-    const booking = await Booking.findByIdAndUpdate(
+    // First, get the booking to check if it has a Google Calendar event
+    const booking = await Booking.findById(req.params.id);
+    
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    
+    // Delete Google Calendar event if it exists
+    if (booking.googleCalendarEventId) {
+      try {
+        await googleCalendarService.deleteEventFromCalendar(booking);
+        console.log(`Google Calendar event deleted for booking ${booking._id}`);
+      } catch (calendarError) {
+        console.error('Error deleting Google Calendar event:', calendarError);
+        // Continue with deletion even if calendar deletion fails
+      }
+    }
+    
+    // Now do the soft delete
+    const updatedBooking = await Booking.findByIdAndUpdate(
       req.params.id,
       {
         isDeleted: true,
@@ -128,11 +154,7 @@ export const deleteBooking = async (req: Request, res: Response) => {
       { new: true }
     );
     
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
-    }
-    
-    return res.json({ message: 'Booking moved to trash successfully', booking });
+    return res.json({ message: 'Booking moved to trash successfully', booking: updatedBooking });
   } catch (error) {
     return res.status(500).json({ message: 'Error moving booking to trash', error: (error as Error).message });
   }

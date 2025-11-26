@@ -9,6 +9,7 @@ router.get('/', companyInfoController.getCompanyInfo);
 
 // Get email variables (public endpoint)
 router.get('/email-variables', companyInfoController.getEmailVariables);
+router.get('/logo-image', companyInfoController.getLogoImage);
 
 // Admin routes (require authentication)
 router.put('/', auth, companyInfoController.updateCompanyInfo);

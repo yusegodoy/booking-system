@@ -712,7 +712,7 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      const url = `/api/bookings/${booking._id}`;
+      const url = `${API_BASE_URL}/bookings/${booking._id}`;
 
       const response = await fetch(url, {
         method: 'DELETE',
@@ -723,8 +723,23 @@ const BookingEditor: React.FC<BookingEditorProps> = ({ booking, onSave, onCancel
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        // Check if response is JSON before trying to parse
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        } else {
+          // If response is not JSON (e.g., HTML error page), get text
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${response.statusText}. Server returned: ${errorText.substring(0, 100)}`);
+        }
+      }
+
+      // Check if response is JSON before trying to parse
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        throw new Error(`Expected JSON response but got: ${textResponse.substring(0, 100)}`);
       }
 
       const result = await response.json();

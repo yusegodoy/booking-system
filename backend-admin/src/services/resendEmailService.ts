@@ -4,6 +4,18 @@ import { EmailTemplate } from '../models/EmailTemplate';
 import { EmailVariable } from '../models/EmailVariable';
 import { IBooking } from '../models/Booking';
 import { SimpleTemplateProcessor } from './simpleTemplateProcessor';
+import { DEFAULT_LOGO_DATA_URL } from '../assets/defaultLogoData';
+import path from 'path';
+import fs from 'fs';
+
+export interface EmailAttachment {
+  filename: string;
+  content: string;
+  contentType?: string;
+  path?: string;
+  cid?: string;
+  disposition?: 'inline' | 'attachment';
+}
 
 export interface EmailData {
   to: string;
@@ -11,6 +23,7 @@ export interface EmailData {
   html: string;
   text: string;
   cc?: string[];
+  attachments?: EmailAttachment[];
 }
 
 export interface TemplateVariables {
@@ -123,6 +136,7 @@ class ResendEmailService {
         subject: emailData.subject,
         html: emailData.html,
         text: emailData.text,
+        attachments: emailData.attachments as any
       });
 
       console.log('✅ Email sent successfully via Resend:', result.data?.id);
@@ -153,15 +167,29 @@ class ResendEmailService {
         return false;
       }
 
-      // Use the SimpleTemplateProcessor for template processing
+      const variables = await this.extractVariablesFromBooking(booking);
+
+      const inlineLogo = this.buildInlineLogoAttachment(variables.logoDataUrl || variables.logoUrl || DEFAULT_LOGO_DATA_URL);
+      const attachments: EmailAttachment[] = [];
+
+      if (inlineLogo) {
+        attachments.push(inlineLogo.attachment);
+        const cidReference = inlineLogo.cidReference;
+        variables.logoCid = cidReference;
+        variables.logoUrl = cidReference;
+        variables.companyLogoUrl = cidReference;
+        variables.logoPublicUrl = cidReference;
+      }
+      
+      // Use the SimpleTemplateProcessor for template processing with merged variables
       const processed = SimpleTemplateProcessor.processEmailTemplate(
         template.htmlContent, 
         template.textContent, 
-        booking
+        booking,
+        variables as any
       );
 
       // Process subject with simple variable replacement for now
-      const variables = await this.extractVariablesFromBooking(booking);
       const subject = this.replaceVariables(template.subject, variables);
 
       // Add admin email to CC if not already included
@@ -174,7 +202,8 @@ class ResendEmailService {
         subject,
         html: processed.html,
         text: processed.text,
-        cc: ccEmails
+        cc: ccEmails,
+        attachments
       });
     } catch (error) {
       console.error('Failed to send template email:', error);
@@ -210,7 +239,9 @@ class ResendEmailService {
       taxId: '',
       operatingHours: '24/7',
       emergencyContact: '+1 (813) 555-0123',
-      logoUrl: '',
+      logoUrl: DEFAULT_LOGO_DATA_URL,
+      logoPublicUrl: DEFAULT_LOGO_DATA_URL,
+      logoDataUrl: DEFAULT_LOGO_DATA_URL,
       primaryColor: '#007bff',
       secondaryColor: '#6c757d',
       accentColor: '#28a745',
@@ -230,6 +261,10 @@ class ResendEmailService {
       const { CompanyInfo } = await import('../models/CompanyInfo');
       const company = await CompanyInfo.findOne({ isActive: true });
       if (company) {
+        const normalizedLogoUrl = company.logoUrl || '';
+        const logoPublicUrl = this.buildPublicLogoUrl(normalizedLogoUrl);
+        const logoDataUrl = this.buildLogoDataUrl(normalizedLogoUrl);
+
         companyInfo = {
           companyName: company.companyName,
           companyEmail: company.companyEmail,
@@ -244,7 +279,9 @@ class ResendEmailService {
           taxId: company.taxId,
           operatingHours: company.operatingHours,
           emergencyContact: company.emergencyContact,
-          logoUrl: company.logoUrl,
+          logoUrl: logoPublicUrl.startsWith('data:') ? logoDataUrl : normalizedLogoUrl || DEFAULT_LOGO_DATA_URL,
+          logoPublicUrl,
+          logoDataUrl,
           primaryColor: company.primaryColor,
           secondaryColor: company.secondaryColor,
           accentColor: company.accentColor,
@@ -391,7 +428,10 @@ class ResendEmailService {
       taxId: companyInfo.taxId,
       operatingHours: companyInfo.operatingHours,
       emergencyContact: companyInfo.emergencyContact,
-      logoUrl: companyInfo.logoUrl,
+      logoUrl: companyInfo.logoDataUrl || companyInfo.logoPublicUrl || companyInfo.logoUrl,
+      logoPublicUrl: companyInfo.logoPublicUrl || companyInfo.logoDataUrl || companyInfo.logoUrl,
+      logoDataUrl: companyInfo.logoDataUrl,
+      companyLogoUrl: companyInfo.logoDataUrl || companyInfo.logoPublicUrl || companyInfo.logoUrl,
       primaryColor: companyInfo.primaryColor,
       secondaryColor: companyInfo.secondaryColor,
       accentColor: companyInfo.accentColor,
@@ -414,8 +454,124 @@ class ResendEmailService {
   private replaceVariables(content: string, variables: TemplateVariables): string {
     // Use the SimpleTemplateProcessor for template processing
     const processor = SimpleTemplateProcessor.getInstance();
-    const data = SimpleTemplateProcessor.extractDataFromBooking(variables as any);
-    return processor.processTemplate(content, data);
+    return processor.processTemplate(content, variables as any);
+  }
+
+  private buildPublicLogoUrl(relativePath: string): string {
+    if (!relativePath) {
+      return DEFAULT_LOGO_DATA_URL;
+    }
+
+    if (/^data:/i.test(relativePath)) {
+      return relativePath;
+    }
+
+    if (/^https?:\/\//i.test(relativePath)) {
+      return relativePath;
+    }
+
+    const candidates = [
+      process.env.API_PUBLIC_URL,
+      process.env.API_BASE_URL,
+      process.env.BACKEND_PUBLIC_URL,
+      process.env.BACKEND_URL,
+      process.env.BACKEND_BASE_URL,
+      process.env.FRONTEND_URL
+    ];
+
+    let baseUrl = candidates.find((value) => value && value.trim().length > 0)?.trim() || 'https://api.booking.airportshuttletpa.com';
+    baseUrl = baseUrl.replace(/\/+$/, '');
+
+    if (baseUrl.endsWith('/api')) {
+      baseUrl = baseUrl.slice(0, -4);
+    }
+
+    const sanitizedPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+    const cacheBuster = encodeURIComponent(path.basename(relativePath || 'logo.png'));
+    const combined = `${baseUrl}${sanitizedPath}?v=${cacheBuster}`;
+
+    return combined.replace(/([^:]\/)\/+/g, '$1');
+  }
+
+  private buildLogoDataUrl(relativePath: string): string {
+    if (!relativePath) {
+      return DEFAULT_LOGO_DATA_URL;
+    }
+
+    if (/^data:/i.test(relativePath)) {
+      return relativePath;
+    }
+
+    if (/^https?:\/\//i.test(relativePath)) {
+      return DEFAULT_LOGO_DATA_URL;
+    }
+
+    const sanitized = relativePath.replace(/^\/+/, '');
+    const absolutePath = path.resolve(__dirname, '..', '..', sanitized);
+
+    if (!fs.existsSync(absolutePath)) {
+      return DEFAULT_LOGO_DATA_URL;
+    }
+
+    try {
+      const fileBuffer = fs.readFileSync(absolutePath);
+      const extension = path.extname(absolutePath).toLowerCase();
+      const contentTypeMap: Record<string, string> = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp'
+      };
+      const contentType = contentTypeMap[extension] || 'image/png';
+      const base64 = fileBuffer.toString('base64');
+      return `data:${contentType};base64,${base64}`;
+    } catch (error) {
+      console.error('Error building logo data URL:', error);
+      return DEFAULT_LOGO_DATA_URL;
+    }
+  }
+
+  private buildInlineLogoAttachment(dataUrl?: string | null): { attachment: EmailAttachment; cidReference: string } | null {
+    if (!dataUrl || typeof dataUrl !== 'string') {
+      return null;
+    }
+
+    const match = /^data:([^;]+);base64,(.+)$/i.exec(dataUrl.trim());
+    if (!match) {
+      return null;
+    }
+
+    const contentType = match[1] || 'image/png';
+    const base64Data = match[2].replace(/\s+/g, '');
+    if (!base64Data) {
+      return null;
+    }
+
+    const extension = this.getExtensionFromContentType(contentType);
+    const cid = 'company-logo';
+
+    return {
+      attachment: {
+        filename: `logo${extension}`,
+        content: base64Data,
+        contentType,
+        cid,
+        disposition: 'inline'
+      },
+      cidReference: `cid:${cid}`
+    };
+  }
+
+  private getExtensionFromContentType(contentType: string): string {
+    const normalized = contentType.toLowerCase();
+    if (normalized.includes('svg')) return '.svg';
+    if (normalized.includes('jpeg')) return '.jpg';
+    if (normalized.includes('jpg')) return '.jpg';
+    if (normalized.includes('webp')) return '.webp';
+    if (normalized.includes('gif')) return '.gif';
+    return '.png';
   }
 
   async sendConfirmationEmail(booking: IBooking): Promise<boolean> {
