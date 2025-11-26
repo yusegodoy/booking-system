@@ -330,6 +330,29 @@ class ResendEmailService {
       console.error('Error fetching company info:', error);
     }
 
+    // Get vehicle type name if vehicleType is an ID
+    let vehicleTypeName = booking.vehicleType || 'Standard Vehicle';
+    if (booking.vehicleType) {
+      // Check if vehicleType is an ObjectId (24 hex characters)
+      const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+      if (objectIdPattern.test(String(booking.vehicleType))) {
+        try {
+          const { VehicleType } = await import('../models/VehicleType');
+          const vehicleTypeDoc = await VehicleType.findById(booking.vehicleType);
+          if (vehicleTypeDoc) {
+            vehicleTypeName = vehicleTypeDoc.name;
+            console.log(`✅ Found vehicle type name: ${vehicleTypeName} for ID: ${booking.vehicleType}`);
+          } else {
+            console.warn(`⚠️ VehicleType not found for ID: ${booking.vehicleType}`);
+          }
+        } catch (error) {
+          console.error('Error fetching vehicle type:', error);
+          // Keep the original value if lookup fails
+        }
+      }
+      // If it's not an ObjectId, assume it's already a name
+    }
+
     return {
       // Customer Information (from BookingEditor FormData)
       firstName: booking.userData.firstName || '',
@@ -378,7 +401,7 @@ class ResendEmailService {
       
       // Service & Vehicle
       serviceType: booking.serviceType || '',
-      vehicleType: booking.vehicleType || 'Standard Vehicle',
+      vehicleType: vehicleTypeName,
       
       // Payment and Status
       paymentMethod: booking.paymentMethod || '',
