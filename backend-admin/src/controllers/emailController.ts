@@ -28,7 +28,15 @@ export const emailController = {
       
       // Don't send password in response
       const { smtpPassword, ...safeConfig } = config.toObject();
-      return res.json(safeConfig);
+      // Ensure new fields have default values if they don't exist
+      const configWithDefaults = {
+        ...safeConfig,
+        autoSendCustomerEmail: safeConfig.autoSendCustomerEmail ?? false,
+        autoSendCompanyEmail: safeConfig.autoSendCompanyEmail ?? false,
+        customerEmailTemplate: safeConfig.customerEmailTemplate ?? '',
+        companyEmailTemplate: safeConfig.companyEmailTemplate ?? ''
+      };
+      return res.json(configWithDefaults);
     } catch (error) {
       console.error('Error getting email config:', error);
       return res.status(500).json({ message: 'Internal server error' });

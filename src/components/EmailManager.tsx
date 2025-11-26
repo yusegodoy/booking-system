@@ -90,7 +90,14 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
       if (response.ok) {
         const config = await response.json();
         console.log('📧 Email config loaded from database:', config);
-        setEmailConfig(config);
+        // Ensure new fields have default values if they don't exist
+        setEmailConfig({
+          ...config,
+          autoSendCustomerEmail: config.autoSendCustomerEmail ?? false,
+          autoSendCompanyEmail: config.autoSendCompanyEmail ?? false,
+          customerEmailTemplate: config.customerEmailTemplate ?? '',
+          companyEmailTemplate: config.companyEmailTemplate ?? ''
+        });
       } else if (response.status === 404) {
         // No config found, use defaults
         console.log('📧 No email configuration found, using defaults');
@@ -108,6 +115,16 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
           autoSendCompanyEmail: false,
           customerEmailTemplate: '',
           companyEmailTemplate: ''
+        });
+      } else {
+        // If there's an error, ensure we have default values for new fields
+        const currentConfig = emailConfig;
+        setEmailConfig({
+          ...currentConfig,
+          autoSendCustomerEmail: currentConfig.autoSendCustomerEmail ?? false,
+          autoSendCompanyEmail: currentConfig.autoSendCompanyEmail ?? false,
+          customerEmailTemplate: currentConfig.customerEmailTemplate ?? '',
+          companyEmailTemplate: currentConfig.companyEmailTemplate ?? ''
         });
       }
     } catch (error) {
@@ -266,7 +283,18 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
       clearTimeout(timeoutId);
 
       if (response.ok) {
+        const result = await response.json();
         setMessage({ type: 'success', text: 'Email configuration saved successfully!' });
+        // Update local state with saved config to ensure consistency
+        if (result.config) {
+          setEmailConfig({
+            ...result.config,
+            autoSendCustomerEmail: result.config.autoSendCustomerEmail ?? false,
+            autoSendCompanyEmail: result.config.autoSendCompanyEmail ?? false,
+            customerEmailTemplate: result.config.customerEmailTemplate ?? '',
+            companyEmailTemplate: result.config.companyEmailTemplate ?? ''
+          });
+        }
         setTimeout(() => setMessage(null), 3000);
       } else {
         const error = await response.json();
