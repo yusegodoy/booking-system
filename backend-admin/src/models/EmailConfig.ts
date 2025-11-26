@@ -10,6 +10,11 @@ export interface IEmailConfig extends Document {
   fromName: string;
   adminEmail: string;
   isActive: boolean;
+  // Auto-send email configuration
+  autoSendCustomerEmail: boolean;
+  autoSendCompanyEmail: boolean;
+  customerEmailTemplate: string; // Template name for customer emails
+  companyEmailTemplate: string; // Template name for company emails
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,6 +60,23 @@ const emailConfigSchema = new Schema<IEmailConfig>({
   isActive: {
     type: Boolean,
     default: false
+  },
+  // Auto-send email configuration
+  autoSendCustomerEmail: {
+    type: Boolean,
+    default: false
+  },
+  autoSendCompanyEmail: {
+    type: Boolean,
+    default: false
+  },
+  customerEmailTemplate: {
+    type: String,
+    default: ''
+  },
+  companyEmailTemplate: {
+    type: String,
+    default: ''
   }
 }, {
   timestamps: true

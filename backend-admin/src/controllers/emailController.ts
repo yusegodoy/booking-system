@@ -46,7 +46,11 @@ export const emailController = {
         fromEmail,
         fromName,
         adminEmail,
-        isActive
+        isActive,
+        autoSendCustomerEmail,
+        autoSendCompanyEmail,
+        customerEmailTemplate,
+        companyEmailTemplate
       } = req.body;
 
       console.log('📧 Updating email configuration:', {
@@ -72,7 +76,11 @@ export const emailController = {
           fromEmail,
           fromName,
           adminEmail,
-          isActive
+          isActive,
+          autoSendCustomerEmail: autoSendCustomerEmail || false,
+          autoSendCompanyEmail: autoSendCompanyEmail || false,
+          customerEmailTemplate: customerEmailTemplate || '',
+          companyEmailTemplate: companyEmailTemplate || ''
         });
       } else {
         console.log('📧 Updating existing email configuration');
@@ -87,6 +95,10 @@ export const emailController = {
         config.fromName = fromName;
         config.adminEmail = adminEmail;
         config.isActive = isActive;
+        config.autoSendCustomerEmail = autoSendCustomerEmail !== undefined ? autoSendCustomerEmail : config.autoSendCustomerEmail || false;
+        config.autoSendCompanyEmail = autoSendCompanyEmail !== undefined ? autoSendCompanyEmail : config.autoSendCompanyEmail || false;
+        config.customerEmailTemplate = customerEmailTemplate !== undefined ? customerEmailTemplate : config.customerEmailTemplate || '';
+        config.companyEmailTemplate = companyEmailTemplate !== undefined ? companyEmailTemplate : config.companyEmailTemplate || '';
       }
 
       await config.save();

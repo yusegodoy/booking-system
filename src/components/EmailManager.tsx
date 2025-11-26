@@ -14,6 +14,10 @@ interface EmailConfig {
   fromName: string;
   adminEmail: string;
   isActive: boolean;
+  autoSendCustomerEmail?: boolean;
+  autoSendCompanyEmail?: boolean;
+  customerEmailTemplate?: string;
+  companyEmailTemplate?: string;
 }
 
 interface EmailTemplate {
@@ -44,7 +48,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
     fromEmail: '',
     fromName: '',
     adminEmail: '',
-    isActive: false
+    isActive: false,
+    autoSendCustomerEmail: false,
+    autoSendCompanyEmail: false,
+    customerEmailTemplate: '',
+    companyEmailTemplate: ''
   });
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
@@ -95,7 +103,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
           fromEmail: 'info@airportshuttletpa.com',
           fromName: 'Airport Shuttle TPA',
           adminEmail: 'info@airportshuttletpa.com',
-          isActive: false
+          isActive: false,
+          autoSendCustomerEmail: false,
+          autoSendCompanyEmail: false,
+          customerEmailTemplate: '',
+          companyEmailTemplate: ''
         });
       }
     } catch (error) {
@@ -539,6 +551,86 @@ const EmailManager: React.FC<EmailManagerProps> = ({ token }) => {
                 />
                 Enable Email Service
               </label>
+            </div>
+
+            {/* Auto-send Email Configuration Section */}
+            <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '2px solid #e0e0e0' }}>
+              <h3 style={{ marginBottom: '20px', color: '#333' }}>📬 Auto-Send Email Configuration</h3>
+              <p style={{ marginBottom: '20px', color: '#666', fontSize: '14px' }}>
+                Configure automatic email sending when a booking is completed through the wizard.
+              </p>
+
+              {/* Customer Email Auto-Send */}
+              <div style={{ marginBottom: '24px', padding: '16px', background: '#f9f9f9', borderRadius: '8px' }}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                    <input
+                      type="checkbox"
+                      checked={emailConfig.autoSendCustomerEmail || false}
+                      onChange={(e) => setEmailConfig({...emailConfig, autoSendCustomerEmail: e.target.checked})}
+                      disabled={!emailConfig.isActive}
+                    />
+                    Send email to customer automatically when booking is completed
+                  </label>
+                </div>
+                {emailConfig.autoSendCustomerEmail && (
+                  <div className="form-group" style={{ marginTop: '12px' }}>
+                    <label>Customer Email Template:</label>
+                    <select
+                      value={emailConfig.customerEmailTemplate || ''}
+                      onChange={(e) => setEmailConfig({...emailConfig, customerEmailTemplate: e.target.value})}
+                      disabled={!emailConfig.isActive}
+                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                    >
+                      <option value="">-- Select Template --</option>
+                      {templates.filter(t => t.isActive).map((template) => (
+                        <option key={template._id} value={template.name}>
+                          {template.name} ({template.type})
+                        </option>
+                      ))}
+                    </select>
+                    <small style={{ display: 'block', marginTop: '4px', color: '#666' }}>
+                      Select the email template to send to customers when they complete a booking
+                    </small>
+                  </div>
+                )}
+              </div>
+
+              {/* Company Email Auto-Send */}
+              <div style={{ marginBottom: '24px', padding: '16px', background: '#f9f9f9', borderRadius: '8px' }}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                    <input
+                      type="checkbox"
+                      checked={emailConfig.autoSendCompanyEmail || false}
+                      onChange={(e) => setEmailConfig({...emailConfig, autoSendCompanyEmail: e.target.checked})}
+                      disabled={!emailConfig.isActive}
+                    />
+                    Send email to company automatically when booking is completed
+                  </label>
+                </div>
+                {emailConfig.autoSendCompanyEmail && (
+                  <div className="form-group" style={{ marginTop: '12px' }}>
+                    <label>Company Email Template:</label>
+                    <select
+                      value={emailConfig.companyEmailTemplate || ''}
+                      onChange={(e) => setEmailConfig({...emailConfig, companyEmailTemplate: e.target.value})}
+                      disabled={!emailConfig.isActive}
+                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                    >
+                      <option value="">-- Select Template --</option>
+                      {templates.filter(t => t.isActive).map((template) => (
+                        <option key={template._id} value={template.name}>
+                          {template.name} ({template.type})
+                        </option>
+                      ))}
+                    </select>
+                    <small style={{ display: 'block', marginTop: '4px', color: '#666' }}>
+                      Select the email template to send to {emailConfig.adminEmail || 'admin email'} when a booking is completed
+                    </small>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-actions">

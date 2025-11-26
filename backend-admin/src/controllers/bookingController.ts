@@ -322,6 +322,62 @@ export const createBooking = async (req: Request, res: Response) => {
       // Don't fail the entire request if global variables generation fails
     }
     
+    // Send automatic emails if configured
+    try {
+      const EmailConfig = (await import('../models/EmailConfig')).EmailConfig;
+      const resendEmailService = (await import('../services/resendEmailService')).default;
+      
+      const emailConfig = await EmailConfig.findOne({ isActive: true });
+      
+      if (emailConfig && emailConfig.isActive) {
+        // Initialize email service
+        await resendEmailService.initialize();
+        
+        // Send customer email if enabled
+        if (emailConfig.autoSendCustomerEmail && emailConfig.customerEmailTemplate && savedBooking.userData?.email) {
+          try {
+            const success = await resendEmailService.sendTemplateEmail(
+              emailConfig.customerEmailTemplate,
+              savedBooking,
+              savedBooking.userData.email,
+              []
+            );
+            if (success) {
+              console.log(`✅ Auto-sent customer email (${emailConfig.customerEmailTemplate}) to ${savedBooking.userData.email}`);
+            } else {
+              console.error(`❌ Failed to auto-send customer email to ${savedBooking.userData.email}`);
+            }
+          } catch (emailError) {
+            console.error('Error sending customer email:', emailError);
+            // Don't fail the booking creation if email fails
+          }
+        }
+        
+        // Send company email if enabled
+        if (emailConfig.autoSendCompanyEmail && emailConfig.companyEmailTemplate && emailConfig.adminEmail) {
+          try {
+            const success = await resendEmailService.sendTemplateEmail(
+              emailConfig.companyEmailTemplate,
+              savedBooking,
+              emailConfig.adminEmail,
+              []
+            );
+            if (success) {
+              console.log(`✅ Auto-sent company email (${emailConfig.companyEmailTemplate}) to ${emailConfig.adminEmail}`);
+            } else {
+              console.error(`❌ Failed to auto-send company email to ${emailConfig.adminEmail}`);
+            }
+          } catch (emailError) {
+            console.error('Error sending company email:', emailError);
+            // Don't fail the booking creation if email fails
+          }
+        }
+      }
+    } catch (emailConfigError) {
+      console.error('Error checking email configuration:', emailConfigError);
+      // Don't fail the booking creation if email config check fails
+    }
+    
     console.log('Booking created successfully:', savedBooking.outboundConfirmationNumber);
     return res.status(201).json(savedBooking);
   } catch (error) {
