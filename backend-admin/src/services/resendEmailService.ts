@@ -169,7 +169,28 @@ class ResendEmailService {
 
       const variables = await this.extractVariablesFromBooking(booking);
 
-      const inlineLogo = this.buildInlineLogoAttachment(variables.logoDataUrl || variables.logoUrl || DEFAULT_LOGO_DATA_URL);
+      // Try to build inline logo attachment (preferred for emails)
+      // First try logoDataUrl (base64), then try to read file and convert to base64, then fallback to public URL
+      let logoForAttachment = variables.logoDataUrl;
+      
+      // If logoDataUrl is not available but we have a relative path, try to read the file
+      if (!logoForAttachment || logoForAttachment === DEFAULT_LOGO_DATA_URL) {
+        const logoPath = variables.logoUrl || variables.logoPublicUrl;
+        if (logoPath && !logoPath.startsWith('http') && !logoPath.startsWith('data:') && !logoPath.startsWith('cid:')) {
+          // Try to read the file and convert to base64
+          const dataUrl = this.buildLogoDataUrl(logoPath);
+          if (dataUrl && dataUrl !== DEFAULT_LOGO_DATA_URL) {
+            logoForAttachment = dataUrl;
+          }
+        }
+      }
+      
+      // If still no valid logo, use the public URL or default
+      if (!logoForAttachment || logoForAttachment === DEFAULT_LOGO_DATA_URL) {
+        logoForAttachment = variables.logoPublicUrl || variables.logoUrl || DEFAULT_LOGO_DATA_URL;
+      }
+
+      const inlineLogo = this.buildInlineLogoAttachment(logoForAttachment);
       const attachments: EmailAttachment[] = [];
 
       if (inlineLogo) {
@@ -179,6 +200,14 @@ class ResendEmailService {
         variables.logoUrl = cidReference;
         variables.companyLogoUrl = cidReference;
         variables.logoPublicUrl = cidReference;
+      } else {
+        // If inline attachment failed, use public URL
+        // Make sure logoUrl is an absolute URL, not a relative path
+        if (variables.logoUrl && !variables.logoUrl.startsWith('http') && !variables.logoUrl.startsWith('data:') && !variables.logoUrl.startsWith('cid:')) {
+          variables.logoUrl = this.buildPublicLogoUrl(variables.logoUrl);
+          variables.companyLogoUrl = variables.logoUrl;
+          variables.logoPublicUrl = variables.logoUrl;
+        }
       }
       
       // Use the SimpleTemplateProcessor for template processing with merged variables
@@ -470,6 +499,10 @@ class ResendEmailService {
       return relativePath;
     }
 
+    // Determine base URL based on environment
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const port = process.env.PORT || '5001';
+    
     const candidates = [
       process.env.API_PUBLIC_URL,
       process.env.API_BASE_URL,
@@ -479,9 +512,20 @@ class ResendEmailService {
       process.env.FRONTEND_URL
     ];
 
-    let baseUrl = candidates.find((value) => value && value.trim().length > 0)?.trim() || 'https://api.booking.airportshuttletpa.com';
+    let baseUrl = candidates.find((value) => value && value.trim().length > 0)?.trim();
+    
+    // If no base URL found, use localhost for development or production URL for production
+    if (!baseUrl) {
+      if (isDevelopment) {
+        baseUrl = `http://localhost:${port}`;
+      } else {
+        baseUrl = 'https://api.booking.airportshuttletpa.com';
+      }
+    }
+    
     baseUrl = baseUrl.replace(/\/+$/, '');
 
+    // Remove /api suffix if present
     if (baseUrl.endsWith('/api')) {
       baseUrl = baseUrl.slice(0, -4);
     }
