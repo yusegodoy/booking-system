@@ -45,6 +45,20 @@ interface Reservation {
     lastName: string;
     email: string;
   };
+  tripInfo?: {
+    pickup?: string;
+    dropoff?: string;
+    date?: string;
+    pickupHour?: string;
+    pickupMinute?: string;
+    pickupPeriod?: string;
+    passengers?: number;
+  };
+  userData?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
 }
 
 interface AdminPortalProps {

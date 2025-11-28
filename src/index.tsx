@@ -24,11 +24,11 @@ if (embeddedContainer) {
   // Mount in root (default behavior for standalone app)
   console.log('Mounting React app in root container');
   const root = ReactDOM.createRoot(rootContainer);
-  root.render(
-    <React.StrictMode>
+root.render(
+  <React.StrictMode>
       <App embedded={false} />
-    </React.StrictMode>
-  );
+  </React.StrictMode>
+);
 } else {
   console.error('No container found for React app. Looking for #quote-and-book-now, #wizard-container, #booking-wizard, or #root');
 }
