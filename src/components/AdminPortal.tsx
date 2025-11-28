@@ -185,7 +185,23 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
             firstName: b.userData?.firstName || '',
             lastName: b.userData?.lastName || '',
             email: b.userData?.email || ''
-          }
+          },
+          // Include full tripInfo for preview tooltip
+          tripInfo: b.tripInfo ? {
+            pickup: b.tripInfo.pickup,
+            dropoff: b.tripInfo.dropoff,
+            date: b.tripInfo.date,
+            pickupHour: b.tripInfo.pickupHour,
+            pickupMinute: b.tripInfo.pickupMinute,
+            pickupPeriod: b.tripInfo.pickupPeriod,
+            passengers: b.tripInfo.passengers
+          } : undefined,
+          // Include userData for preview tooltip
+          userData: b.userData ? {
+            firstName: b.userData.firstName,
+            lastName: b.userData.lastName,
+            email: b.userData.email
+          } : undefined
         }));
         setReservations(reservationsData);
         

@@ -1040,7 +1040,7 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
         childSeatsCharge: calculatedPrice.childSeatsCharge || 0,
         roundTripDiscount: calculatedPrice.roundTripDiscount || 0,
         returnTripPrice: calculatedPrice.returnTripPrice || 0,
-        outboundPrice: (calculatedPrice as any).outboundPrice || 
+        outboundPrice: calculatedPrice.outboundPrice || 
                       ((calculatedPrice.basePrice || 0) + 
                        (calculatedPrice.distancePrice || 0) + 
                        (calculatedPrice.stopsCharge || 0) + 
@@ -1060,8 +1060,8 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
           // Si es roundtrip, el precio de ida debe ser el precio de ida sin incluir vuelta
           if (tripInfo.roundTrip && calculatedPrice.returnTripPrice !== undefined) {
             // Usar outboundPrice si está disponible, sino calcular desde basePrice
-            let outboundPrice = (calculatedPrice as any).outboundPrice;
-            if (!outboundPrice) {
+            let outboundPrice = calculatedPrice.outboundPrice;
+            if (!outboundPrice || outboundPrice === 0) {
               // Calcular precio de ida: basePrice + distancePrice + stopsCharge + childSeatsCharge
               outboundPrice = (calculatedPrice.basePrice || 0) + 
                             (calculatedPrice.distancePrice || 0) + 
