@@ -67,6 +67,20 @@ export interface IBooking extends Document {
   creditCardFeePercentage?: number;
   creditCardFeeFixed?: number;
   
+  // Additional pricing fields from pricing calculation
+  basePrice?: number;
+  distancePrice?: number;
+  stopsCharge?: number;
+  returnTripPrice?: number;
+  subtotal?: number;
+  finalTotal?: number;
+  paymentDiscount?: number;
+  paymentDiscountDescription?: string;
+  areaName?: string;
+  pricingMethod?: string;
+  surgeMultiplier?: number;
+  surgeName?: string;
+  
   // Global variables for email templates and consistency across the application
   globalVariables?: {
     // Basic trip information
@@ -328,6 +342,56 @@ const bookingSchema = new Schema<IBooking>({
   creditCardFeeFixed: {
     type: Number,
     default: 0
+  },
+  
+  // Additional pricing fields from pricing calculation
+  basePrice: {
+    type: Number,
+    default: 0
+  },
+  distancePrice: {
+    type: Number,
+    default: 0
+  },
+  stopsCharge: {
+    type: Number,
+    default: 0
+  },
+  returnTripPrice: {
+    type: Number,
+    default: 0
+  },
+  subtotal: {
+    type: Number,
+    default: 0
+  },
+  finalTotal: {
+    type: Number,
+    default: 0
+  },
+  paymentDiscount: {
+    type: Number,
+    default: 0
+  },
+  paymentDiscountDescription: {
+    type: String,
+    default: ''
+  },
+  areaName: {
+    type: String,
+    default: ''
+  },
+  pricingMethod: {
+    type: String,
+    default: 'distance'
+  },
+  surgeMultiplier: {
+    type: Number,
+    default: 1
+  },
+  surgeName: {
+    type: String,
+    default: ''
   },
   
   // Global variables for email templates and consistency
