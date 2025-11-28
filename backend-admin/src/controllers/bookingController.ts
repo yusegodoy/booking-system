@@ -508,8 +508,9 @@ export const createBooking = async (req: Request, res: Response) => {
             } else {
               // Fallback: calculate return price from outbound price with roundtrip discount
               // This should match the calculation in pricingController
-              const roundTripDiscountPercent = savedBooking.roundTripDiscount > 0 
-                ? (savedBooking.roundTripDiscount / outboundPrice) * 100 
+              const roundTripDiscount = savedBooking.roundTripDiscount || 0;
+              const roundTripDiscountPercent = roundTripDiscount > 0 && outboundPrice > 0
+                ? (roundTripDiscount / outboundPrice) * 100 
                 : 5; // Default 5% if not available
               returnPrice = outboundPrice * (1 - roundTripDiscountPercent / 100);
             }
@@ -537,8 +538,9 @@ export const createBooking = async (req: Request, res: Response) => {
               returnPrice = savedBooking.returnTripPrice;
             } else {
               // Calculate return price from outbound with roundtrip discount
-              const roundTripDiscountPercent = savedBooking.roundTripDiscount > 0 
-                ? (savedBooking.roundTripDiscount / outboundPrice) * 100 
+              const roundTripDiscount = savedBooking.roundTripDiscount || 0;
+              const roundTripDiscountPercent = roundTripDiscount > 0 && outboundPrice > 0
+                ? (roundTripDiscount / outboundPrice) * 100 
                 : 5;
               returnPrice = outboundPrice * (1 - roundTripDiscountPercent / 100);
             }
