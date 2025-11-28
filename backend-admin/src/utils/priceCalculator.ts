@@ -320,9 +320,10 @@ export async function calculatePrice(
     totalPrice += vehicleType.childSeatCharge * childSeats;
   }
 
-  if (roundTrip) {
-    totalPrice = totalPrice * (1 - vehicleType.roundTripDiscount / 100);
-  }
+  // NOTE: Do NOT apply roundTrip discount here
+  // The roundTrip discount should be applied only to the return trip
+  // The outbound trip price should remain at full price
+  // This is handled in pricingController.ts
 
   return {
     basePrice,

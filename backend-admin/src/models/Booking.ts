@@ -72,6 +72,7 @@ export interface IBooking extends Document {
   distancePrice?: number;
   stopsCharge?: number;
   returnTripPrice?: number;
+  outboundPrice?: number; // Price for outbound trip (before roundtrip discount)
   subtotal?: number;
   finalTotal?: number;
   paymentDiscount?: number;
@@ -358,6 +359,10 @@ const bookingSchema = new Schema<IBooking>({
     default: 0
   },
   returnTripPrice: {
+    type: Number,
+    default: 0
+  },
+  outboundPrice: {
     type: Number,
     default: 0
   },

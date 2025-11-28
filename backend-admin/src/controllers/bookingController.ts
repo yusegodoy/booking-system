@@ -495,76 +495,61 @@ export const createBooking = async (req: Request, res: Response) => {
           totalPrice: (() => {
             let returnPrice = 0;
             
+            // Use outboundPrice if available (price of outbound trip before discounts)
+            const outboundPrice = savedBooking.outboundPrice || 
+                                 (savedBooking.basePrice || 0) + 
+                                 (savedBooking.distancePrice || 0) + 
+                                 (savedBooking.stopsCharge || 0) + 
+                                 (savedBooking.childSeatsCharge || 0);
+            
             // If returnTripPrice is explicitly stored, use it
             if (savedBooking.returnTripPrice && savedBooking.returnTripPrice > 0) {
               returnPrice = savedBooking.returnTripPrice;
-              
-              // Calculate proportional payment discount for return trip
-              const outboundSubtotal = (savedBooking.basePrice || 0) + 
-                                      (savedBooking.distancePrice || 0) + 
-                                      (savedBooking.stopsCharge || 0) + 
-                                      (savedBooking.childSeatsCharge || 0);
-              const totalSubtotal = outboundSubtotal + returnPrice;
-              
-              if (totalSubtotal > 0 && savedBooking.paymentDiscount) {
-                const returnProportion = returnPrice / totalSubtotal;
-                const returnDiscount = savedBooking.paymentDiscount * returnProportion;
-                returnPrice = returnPrice - returnDiscount;
-              }
             } else {
-              // Fallback: estimate return price as base price with child seats (same as outbound)
-              returnPrice = (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0);
-              
-              // Apply payment discount proportionally if available
-              if (savedBooking.paymentDiscount) {
-                const outboundSubtotal = (savedBooking.basePrice || 0) + 
-                                        (savedBooking.distancePrice || 0) + 
-                                        (savedBooking.stopsCharge || 0) + 
-                                        (savedBooking.childSeatsCharge || 0);
-                const totalSubtotal = outboundSubtotal + returnPrice;
-                if (totalSubtotal > 0) {
-                  const returnProportion = returnPrice / totalSubtotal;
-                  const returnDiscount = savedBooking.paymentDiscount * returnProportion;
-                  returnPrice = returnPrice - returnDiscount;
-                }
-              }
+              // Fallback: calculate return price from outbound price with roundtrip discount
+              // This should match the calculation in pricingController
+              const roundTripDiscountPercent = savedBooking.roundTripDiscount > 0 
+                ? (savedBooking.roundTripDiscount / outboundPrice) * 100 
+                : 5; // Default 5% if not available
+              returnPrice = outboundPrice * (1 - roundTripDiscountPercent / 100);
             }
+            
+            // Calculate proportional payment discount for return trip
+            const totalSubtotal = outboundPrice + returnPrice;
+            if (totalSubtotal > 0 && savedBooking.paymentDiscount) {
+              const returnProportion = returnPrice / totalSubtotal;
+              const returnDiscount = savedBooking.paymentDiscount * returnProportion;
+              returnPrice = returnPrice - returnDiscount;
+            }
+            
             return Math.round(returnPrice * 100) / 100;
           })(),
           calculatedPrice: (() => {
             // Same calculation for calculatedPrice field (store as number)
-            let returnPrice = 0;
+            const outboundPrice = savedBooking.outboundPrice || 
+                                 (savedBooking.basePrice || 0) + 
+                                 (savedBooking.distancePrice || 0) + 
+                                 (savedBooking.stopsCharge || 0) + 
+                                 (savedBooking.childSeatsCharge || 0);
             
+            let returnPrice = 0;
             if (savedBooking.returnTripPrice && savedBooking.returnTripPrice > 0) {
               returnPrice = savedBooking.returnTripPrice;
-              
-              const outboundSubtotal = (savedBooking.basePrice || 0) + 
-                                      (savedBooking.distancePrice || 0) + 
-                                      (savedBooking.stopsCharge || 0) + 
-                                      (savedBooking.childSeatsCharge || 0);
-              const totalSubtotal = outboundSubtotal + returnPrice;
-              
-              if (totalSubtotal > 0 && savedBooking.paymentDiscount) {
-                const returnProportion = returnPrice / totalSubtotal;
-                const returnDiscount = savedBooking.paymentDiscount * returnProportion;
-                returnPrice = returnPrice - returnDiscount;
-              }
             } else {
-              returnPrice = (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0);
-              
-              if (savedBooking.paymentDiscount) {
-                const outboundSubtotal = (savedBooking.basePrice || 0) + 
-                                        (savedBooking.distancePrice || 0) + 
-                                        (savedBooking.stopsCharge || 0) + 
-                                        (savedBooking.childSeatsCharge || 0);
-                const totalSubtotal = outboundSubtotal + returnPrice;
-                if (totalSubtotal > 0) {
-                  const returnProportion = returnPrice / totalSubtotal;
-                  const returnDiscount = savedBooking.paymentDiscount * returnProportion;
-                  returnPrice = returnPrice - returnDiscount;
-                }
-              }
+              // Calculate return price from outbound with roundtrip discount
+              const roundTripDiscountPercent = savedBooking.roundTripDiscount > 0 
+                ? (savedBooking.roundTripDiscount / outboundPrice) * 100 
+                : 5;
+              returnPrice = outboundPrice * (1 - roundTripDiscountPercent / 100);
             }
+            
+            const totalSubtotal = outboundPrice + returnPrice;
+            if (totalSubtotal > 0 && savedBooking.paymentDiscount) {
+              const returnProportion = returnPrice / totalSubtotal;
+              const returnDiscount = savedBooking.paymentDiscount * returnProportion;
+              returnPrice = returnPrice - returnDiscount;
+            }
+            
             return Math.round(returnPrice * 100) / 100;
           })(),
           bookingFee: savedBooking.bookingFee || 0,
@@ -584,12 +569,27 @@ export const createBooking = async (req: Request, res: Response) => {
           surgeName: savedBooking.surgeName || '',
           stopsCharge: 0, // No stops for return trip
           returnTripPrice: 0,
-          subtotal: (savedBooking.basePrice || 0) > 0 
-            ? (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0)
-            : (savedBooking.totalPrice || 0) * 0.5,
-          finalTotal: (savedBooking.basePrice || 0) > 0 
-            ? (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0)
-            : (savedBooking.totalPrice || 0) * 0.5,
+          subtotal: (() => {
+            // Calculate return subtotal (return price before payment discount)
+            const returnPrice = savedBooking.returnTripPrice || 0;
+            return returnPrice;
+          })(),
+          finalTotal: (() => {
+            // Calculate return final total (return price after payment discount)
+            let returnPrice = savedBooking.returnTripPrice || 0;
+            const outboundPrice = savedBooking.outboundPrice || 
+                                 (savedBooking.basePrice || 0) + 
+                                 (savedBooking.distancePrice || 0) + 
+                                 (savedBooking.stopsCharge || 0) + 
+                                 (savedBooking.childSeatsCharge || 0);
+            const totalSubtotal = outboundPrice + returnPrice;
+            if (totalSubtotal > 0 && savedBooking.paymentDiscount) {
+              const returnProportion = returnPrice / totalSubtotal;
+              const returnDiscount = savedBooking.paymentDiscount * returnProportion;
+              returnPrice = returnPrice - returnDiscount;
+            }
+            return Math.round(returnPrice * 100) / 100;
+          })(),
           paymentDiscount: savedBooking.paymentDiscount || 0,
           paymentDiscountDescription: savedBooking.paymentDiscountDescription || '',
           areaName: savedBooking.areaName || '',

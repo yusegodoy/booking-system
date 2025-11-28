@@ -160,21 +160,36 @@ export const calculatePrice = async (req: Request, res: Response) => {
     console.log('=== CALCULATION RESULT ===');
     console.log('Result from calculatePriceWithAreas:', result);
 
-    // Calculate additional charges
+    // Calculate additional charges for breakdown display
+    // NOTE: result.totalPrice from priceCalculator already includes these charges
+    // We calculate them here only for the breakdown display
     const stopsCharge = stopsCount * vehicleType.stopCharge;
     const childSeatsCharge = childSeatsCount * vehicleType.childSeatCharge;
     
     // Calculate round trip discount
     let roundTripDiscount = 0;
     let returnTripPrice = 0;
+    let outboundPrice = 0;
+    
+    // Calculate outbound price (base price without roundtrip discount)
+    // result.totalPrice already includes: basePrice + distancePrice + surge + stops + childSeats
+    // For roundtrip: outbound = full price, return = outbound with discount
     if (isRoundTrip) {
-      // For round trips, the return trip gets a 5% discount
+      // Outbound price is the same as result.totalPrice (no roundtrip discount on outbound)
+      outboundPrice = result.totalPrice;
+      // Return trip gets a discount (typically 5%)
       returnTripPrice = result.totalPrice * (1 - vehicleType.roundTripDiscount / 100);
       roundTripDiscount = result.totalPrice - returnTripPrice;
+    } else {
+      // Single trip, outbound is the total
+      outboundPrice = result.totalPrice;
+      returnTripPrice = 0;
     }
 
     // Calculate subtotal before payment method discount
-    const subtotal = result.totalPrice + stopsCharge + childSeatsCharge + returnTripPrice;
+    // For roundtrip: outbound + return
+    // For single: just outbound
+    const subtotal = isRoundTrip ? (outboundPrice + returnTripPrice) : outboundPrice;
 
     // Apply payment method discount
     let paymentDiscount = 0;
@@ -196,6 +211,7 @@ export const calculatePrice = async (req: Request, res: Response) => {
       childSeatsCharge: Math.round(childSeatsCharge * 100) / 100,
       roundTripDiscount: Math.round(roundTripDiscount * 100) / 100,
       returnTripPrice: Math.round(returnTripPrice * 100) / 100,
+      outboundPrice: Math.round(outboundPrice * 100) / 100, // Add outbound price for clarity
       subtotal: Math.round(subtotal * 100) / 100,
       paymentDiscount: Math.round(paymentDiscount * 100) / 100,
       finalTotal: Math.round(finalTotal * 100) / 100,
