@@ -170,23 +170,52 @@ export class GoogleCalendarService {
 
   // Prepare event data from booking
   private prepareEventData(booking: IBooking, config: any) {
-    // Parse the date correctly in local timezone to avoid timezone issues
+    // Parse the date and time correctly for America/New_York timezone
     const [year, month, day] = booking.tripInfo.date.split('-').map(Number);
-    const pickupDate = new Date(year, month - 1, day); // month is 0-indexed
     
     const pickupHour = parseInt(booking.tripInfo.pickupHour || '0');
     const pickupMinute = parseInt(booking.tripInfo.pickupMinute || '0');
     const isPM = (booking.tripInfo.pickupPeriod || '').toUpperCase() === 'PM';
     
-    const startTime = new Date(pickupDate);
-    startTime.setHours(
-      isPM && pickupHour !== 12 ? pickupHour + 12 : 
-      pickupHour === 12 && !isPM ? 0 : pickupHour, 
-      pickupMinute, 0, 0
-    );
+    // Convert to 24-hour format
+    let hour24 = pickupHour;
+    if (isPM && pickupHour !== 12) {
+      hour24 = pickupHour + 12;
+    } else if (!isPM && pickupHour === 12) {
+      hour24 = 0;
+    }
     
-    const endTime = new Date(startTime);
-    endTime.setHours(endTime.getHours() + 2); // Default 2 hours duration
+    // Create date/time string in ISO format for America/New_York timezone
+    // The issue: when we use toISOString(), it converts to UTC, but Google Calendar
+    // interprets the dateTime in the specified timezone, causing a 5-hour offset
+    // Solution: Format the date/time directly without converting to UTC
+    // Google Calendar will interpret it in the timezone specified (America/New_York)
+    // Format: YYYY-MM-DDTHH:mm:ss (without 'Z' or timezone offset)
+    const formatDateTime = (y: number, m: number, d: number, h: number, min: number): string => {
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`;
+    };
+    
+    const startDateTimeStr = formatDateTime(year, month, day, hour24, pickupMinute);
+    
+    // Calculate end time (2 hours later)
+    let endHour = hour24 + 2;
+    let endDay = day;
+    let endMonth = month;
+    let endYear = year;
+    if (endHour >= 24) {
+      endHour = endHour - 24;
+      endDay++;
+      const daysInMonth = new Date(year, month, 0).getDate();
+      if (endDay > daysInMonth) {
+        endDay = 1;
+        endMonth++;
+        if (endMonth > 12) {
+          endMonth = 1;
+          endYear++;
+        }
+      }
+    }
+    const endDateTimeStr = formatDateTime(endYear, endMonth, endDay, endHour, pickupMinute);
 
     // Generate title using template (with fallback)
     const titleTemplate = config.eventTitleTemplate || '🚗 {{customerName}} - {{pickupAddress}} to {{dropoffAddress}}';
@@ -204,11 +233,11 @@ export class GoogleCalendarService {
       description: description,
       location: location,
       start: {
-        dateTime: startTime.toISOString(),
+        dateTime: startDateTimeStr,
         timeZone: 'America/New_York'
       },
       end: {
-        dateTime: endTime.toISOString(),
+        dateTime: endDateTimeStr,
         timeZone: 'America/New_York'
       },
       colorId: this.getColorIdForStatus(booking.status),

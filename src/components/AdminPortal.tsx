@@ -445,14 +445,30 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
     const event = info.event;
     const reservation = reservations.find(r => r._id === event.id);
     if (reservation) {
+      // Format pickup time correctly from tripInfo
+      const formatPickupTime = (booking: any) => {
+        if (booking.tripInfo?.pickupHour && booking.tripInfo?.pickupMinute && booking.tripInfo?.pickupPeriod) {
+          return `${booking.tripInfo.pickupHour}:${booking.tripInfo.pickupMinute} ${booking.tripInfo.pickupPeriod}`;
+        }
+        // Fallback to pickupDate if tripInfo is not available
+        if (booking.pickupDate) {
+          return formatDate(booking.pickupDate);
+        }
+        return 'N/A';
+      };
+      
+      const pickupTimeDisplay = formatPickupTime(reservation);
+      const pickupDateDisplay = reservation.tripInfo?.date || reservation.pickupDate || 'N/A';
+      
       const tooltipContent = `
         <div style="padding: 10px; max-width: 300px;">
-          <h4 style="margin: 0 0 8px 0; color: #333;">${reservation.user?.firstName} ${reservation.user?.lastName}</h4>
-          <p style="margin: 4px 0; font-size: 12px;"><strong>Email:</strong> ${reservation.user?.email || 'N/A'}</p>
-          <p style="margin: 4px 0; font-size: 12px;"><strong>From:</strong> ${reservation.pickup}</p>
-          <p style="margin: 4px 0; font-size: 12px;"><strong>To:</strong> ${reservation.dropoff}</p>
-          <p style="margin: 4px 0; font-size: 12px;"><strong>Date:</strong> ${formatDate(reservation.pickupDate)}</p>
-          <p style="margin: 4px 0; font-size: 12px;"><strong>Passengers:</strong> ${reservation.passengers}</p>
+          <h4 style="margin: 0 0 8px 0; color: #333;">${reservation.userData?.firstName || reservation.user?.firstName || ''} ${reservation.userData?.lastName || reservation.user?.lastName || ''}</h4>
+          <p style="margin: 4px 0; font-size: 12px;"><strong>Email:</strong> ${reservation.userData?.email || reservation.user?.email || 'N/A'}</p>
+          <p style="margin: 4px 0; font-size: 12px;"><strong>From:</strong> ${reservation.tripInfo?.pickup || reservation.pickup || 'N/A'}</p>
+          <p style="margin: 4px 0; font-size: 12px;"><strong>To:</strong> ${reservation.tripInfo?.dropoff || reservation.dropoff || 'N/A'}</p>
+          <p style="margin: 4px 0; font-size: 12px;"><strong>Date:</strong> ${pickupDateDisplay}</p>
+          <p style="margin: 4px 0; font-size: 12px;"><strong>Pickup Time:</strong> ${pickupTimeDisplay}</p>
+          <p style="margin: 4px 0; font-size: 12px;"><strong>Passengers:</strong> ${reservation.tripInfo?.passengers || reservation.passengers || 'N/A'}</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>Vehicle:</strong> ${reservation.vehicleType || 'N/A'}</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>Status:</strong> ${reservation.status}</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>Price:</strong> ${formatPrice(reservation.totalPrice)}</p>
