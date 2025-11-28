@@ -939,6 +939,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
               }}
               slotMinTime="00:00:00"
               slotMaxTime="24:00:00"
+              firstDay={1}
             />
           </div>
         )}
