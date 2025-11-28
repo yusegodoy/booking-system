@@ -221,9 +221,12 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
     basePrice: number;
     distancePrice: number;
     stopsCharge: number;
+    childSeatsCharge: number;
+    roundTripDiscount: number;
     returnTripPrice: number;
     subtotal: number;
     paymentDiscount: number;
+    paymentDiscountDescription?: string;
     finalTotal: number;
     areaName: string;
     pricingMethod: string;
