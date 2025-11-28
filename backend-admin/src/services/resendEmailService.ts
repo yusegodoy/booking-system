@@ -14,6 +14,7 @@ export interface EmailAttachment {
   contentType?: string;
   path?: string;
   cid?: string;
+  content_id?: string; // Resend uses content_id for inline attachments
   disposition?: 'inline' | 'attachment';
 }
 
@@ -129,6 +130,32 @@ class ResendEmailService {
         from: this.fromEmail
       });
 
+      // Transform attachments for Resend API format
+      const resendAttachments = emailData.attachments?.map(att => {
+        const resendAtt: any = {
+          filename: att.filename,
+          content: att.content
+        };
+        
+        // For inline attachments, use content_id (Resend's format)
+        // Resend requires content_id (not cid) for inline attachments
+        if (att.disposition === 'inline') {
+          const contentId = att.content_id || att.cid;
+          if (contentId) {
+            resendAtt.content_id = contentId;
+            console.log('✅ Setting content_id for inline attachment:', contentId);
+          } else {
+            console.warn('⚠️ Inline attachment missing content_id/cid');
+          }
+        }
+        
+        return resendAtt;
+      }) || [];
+      
+      if (resendAttachments.length > 0) {
+        console.log('📎 Sending email with', resendAttachments.length, 'attachment(s)');
+      }
+
       const result = await this.resend.emails.send({
         from: this.fromEmail,
         to: emailData.to,
@@ -136,7 +163,7 @@ class ResendEmailService {
         subject: emailData.subject,
         html: emailData.html,
         text: emailData.text,
-        attachments: emailData.attachments as any
+        attachments: resendAttachments.length > 0 ? resendAttachments : undefined
       });
 
       console.log('✅ Email sent successfully via Resend:', result.data?.id);
@@ -194,13 +221,16 @@ class ResendEmailService {
       const attachments: EmailAttachment[] = [];
 
       if (inlineLogo) {
+        console.log('✅ Creating inline logo attachment with CID:', inlineLogo.cidReference);
         attachments.push(inlineLogo.attachment);
         const cidReference = inlineLogo.cidReference;
         variables.logoCid = cidReference;
         variables.logoUrl = cidReference;
         variables.companyLogoUrl = cidReference;
         variables.logoPublicUrl = cidReference;
+        console.log('✅ Logo URL set to CID reference:', cidReference);
       } else {
+        console.log('⚠️ Inline logo attachment failed, using public URL');
         // If inline attachment failed, use public URL
         // Make sure logoUrl is an absolute URL, not a relative path
         if (variables.logoUrl && !variables.logoUrl.startsWith('http') && !variables.logoUrl.startsWith('data:') && !variables.logoUrl.startsWith('cid:')) {
@@ -625,6 +655,7 @@ class ResendEmailService {
         content: base64Data,
         contentType,
         cid,
+        content_id: cid, // Resend uses content_id for inline attachments
         disposition: 'inline'
       },
       cidReference: `cid:${cid}`
