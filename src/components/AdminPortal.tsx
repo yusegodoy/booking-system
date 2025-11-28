@@ -518,20 +518,53 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
     setTooltip({ show: false, content: '', x: 0, y: 0 });
   };
 
-  // Generate events for FullCalendar
-  const calendarEvents = reservations.map(r => ({
-    id: r._id,
-    title: (r.user ? `${r.user.firstName} ${r.user.lastName} - ` : '') + `${r.pickup} → ${r.dropoff} (${r.passengers} pax)`,
-    start: r.pickupDate,
-    end: r.pickupDate,
-    backgroundColor: r.status === 'Done' ? '#d3d3d3' : r.status === 'Assigned' ? '#28a745' : r.status === 'Unassigned' ? '#8a2be2' : r.status === 'Canceled' ? '#dc3545' : r.status === 'On the way' ? '#ffc107' : r.status === 'Arrived' ? '#17a2b8' : r.status === 'Customer in car' ? '#fd7e14' : r.status === 'Customer dropped off' ? '#6f42c1' : r.status === 'Customer dropped off - Pending payment' ? '#e83e8c' : r.status === 'No Show' ? '#6c757d' : '#007bff',
-    borderColor: '#333',
-    extendedProps: {
-      status: r.status,
-      vehicleType: r.vehicleType,
-      email: r.user?.email
-    }
-  }));
+  // Generate events for FullCalendar with proper time sorting
+  const calendarEvents = reservations
+    .map(r => {
+      // Build start datetime with time from tripInfo
+      let startDateTime = r.pickupDate;
+      
+      // If tripInfo has time information, include it
+      if (r.tripInfo?.date && r.tripInfo?.pickupHour && r.tripInfo?.pickupMinute && r.tripInfo?.pickupPeriod) {
+        const hour = parseInt(r.tripInfo.pickupHour);
+        const minute = parseInt(r.tripInfo.pickupMinute);
+        const isPM = r.tripInfo.pickupPeriod.toUpperCase() === 'PM';
+        
+        // Convert to 24-hour format
+        let hour24 = hour;
+        if (isPM && hour !== 12) {
+          hour24 = hour + 12;
+        } else if (!isPM && hour === 12) {
+          hour24 = 0;
+        }
+        
+        // Format as ISO datetime string: YYYY-MM-DDTHH:mm:ss
+        startDateTime = `${r.tripInfo.date}T${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+      } else if (r.pickupDate) {
+        // Fallback: use pickupDate with default time (start of day)
+        startDateTime = `${r.pickupDate}T00:00:00`;
+      }
+      
+      return {
+        id: r._id,
+        title: (r.user ? `${r.user.firstName} ${r.user.lastName} - ` : '') + `${r.pickup} → ${r.dropoff} (${r.passengers} pax)`,
+        start: startDateTime,
+        end: startDateTime, // Same as start for all-day events, or add duration if needed
+        backgroundColor: r.status === 'Done' ? '#d3d3d3' : r.status === 'Assigned' ? '#28a745' : r.status === 'Unassigned' ? '#8a2be2' : r.status === 'Canceled' ? '#dc3545' : r.status === 'On the way' ? '#ffc107' : r.status === 'Arrived' ? '#17a2b8' : r.status === 'Customer in car' ? '#fd7e14' : r.status === 'Customer dropped off' ? '#6f42c1' : r.status === 'Customer dropped off - Pending payment' ? '#e83e8c' : r.status === 'No Show' ? '#6c757d' : '#007bff',
+        borderColor: '#333',
+        extendedProps: {
+          status: r.status,
+          vehicleType: r.vehicleType,
+          email: r.user?.email
+        }
+      };
+    })
+    .sort((a, b) => {
+      // Sort events chronologically by start time
+      const dateA = new Date(a.start).getTime();
+      const dateB = new Date(b.start).getTime();
+      return dateA - dateB;
+    });
 
   const updateReservationStatus = async (reservationId: string, newStatus: string) => {
     if (!token) return;
@@ -898,6 +931,14 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToMain }) => {
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
               }}
               height="auto"
+              eventOrder="start"
+              eventTimeFormat={{
+                hour: 'numeric',
+                minute: '2-digit',
+                meridiem: 'short'
+              }}
+              slotMinTime="00:00:00"
+              slotMaxTime="24:00:00"
             />
           </div>
         )}
