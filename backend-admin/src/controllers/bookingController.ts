@@ -216,10 +216,67 @@ export const createBooking = async (req: Request, res: Response) => {
     const bookingData = req.body;
     
     // Generate confirmation number if not provided
+    // Use consecutive numbering system instead of timestamp
     if (!bookingData.outboundConfirmationNumber) {
-      const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 1000);
-      bookingData.outboundConfirmationNumber = `BK${timestamp}${random}`;
+      let nextNumber = 10000;
+      
+      // Find the highest confirmation number in the database
+      const lastBooking = await Booking.findOne(
+        { outboundConfirmationNumber: { $exists: true } },
+        { outboundConfirmationNumber: 1 },
+        { sort: { outboundConfirmationNumber: -1 } }
+      );
+
+      if (lastBooking && lastBooking.outboundConfirmationNumber) {
+        // Extract numeric part from confirmation number
+        const confNumber = lastBooking.outboundConfirmationNumber.toString();
+        const numericPart = parseInt(confNumber);
+        if (!isNaN(numericPart) && numericPart >= 10000) {
+          nextNumber = numericPart + 1;
+        } else {
+          // If it's not a pure number, try to extract numeric part from string
+          const match = confNumber.match(/\d+/);
+          if (match) {
+            const extractedNumber = parseInt(match[0]);
+            if (!isNaN(extractedNumber) && extractedNumber >= 10000) {
+              nextNumber = extractedNumber + 1;
+            }
+          }
+        }
+      }
+
+      // Double-check that this number doesn't already exist
+      let attempts = 0;
+      const maxAttempts = 100;
+      let foundAvailableNumber = false;
+      
+      while (attempts < maxAttempts) {
+        const existingBooking = await Booking.findOne({ 
+          $or: [
+            { outboundConfirmationNumber: nextNumber.toString() },
+            { returnConfirmationNumber: nextNumber.toString() }
+          ]
+        });
+        
+        if (!existingBooking) {
+          foundAvailableNumber = true;
+          break;
+        }
+        
+        nextNumber++;
+        attempts++;
+      }
+
+      if (foundAvailableNumber && nextNumber <= 99999) {
+        bookingData.outboundConfirmationNumber = nextNumber.toString();
+        console.log(`✅ Generated consecutive confirmation number: ${bookingData.outboundConfirmationNumber}`);
+      } else {
+        // Fallback: use timestamp if we can't find a consecutive number
+        console.warn('⚠️ Could not find consecutive confirmation number, using timestamp fallback');
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 1000);
+        bookingData.outboundConfirmationNumber = `BK${timestamp}${random}`;
+      }
     }
     
     // Set default values for required fields if not provided
@@ -313,6 +370,268 @@ export const createBooking = async (req: Request, res: Response) => {
       // Don't fail the entire request if customer creation fails
     }
     
+    // If this is a roundtrip booking, automatically create a return booking
+    let returnBooking = null;
+    if (savedBooking.tripInfo?.roundTrip && 
+        savedBooking.tripInfo?.returnDate && 
+        savedBooking.tripInfo?.returnHour && 
+        savedBooking.tripInfo?.returnMinute && 
+        savedBooking.tripInfo?.returnPeriod) {
+      try {
+        console.log('🔄 Roundtrip detected, creating return booking automatically...');
+        
+        // Generate confirmation number for return if not provided
+        let returnConfirmationNumber = bookingData.returnConfirmationNumber;
+        if (!returnConfirmationNumber) {
+          // Use the same logic as getNextConfirmationNumber to get consecutive number
+          let nextNumber = 10000;
+          
+          // Find the highest confirmation number in the database
+          const lastBooking = await Booking.findOne(
+            { outboundConfirmationNumber: { $exists: true } },
+            { outboundConfirmationNumber: 1 },
+            { sort: { outboundConfirmationNumber: -1 } }
+          );
+
+          if (lastBooking && lastBooking.outboundConfirmationNumber) {
+            // Extract numeric part from confirmation number
+            // Handle both pure numeric (e.g., "10001") and string formats
+            const confNumber = lastBooking.outboundConfirmationNumber.toString();
+            const numericPart = parseInt(confNumber);
+            if (!isNaN(numericPart) && numericPart >= 10000) {
+              nextNumber = numericPart + 1;
+            } else {
+              // If it's not a pure number, try to extract numeric part from string like "BK10001"
+              const match = confNumber.match(/\d+/);
+              if (match) {
+                const extractedNumber = parseInt(match[0]);
+                if (!isNaN(extractedNumber) && extractedNumber >= 10000) {
+                  nextNumber = extractedNumber + 1;
+                }
+              }
+            }
+          }
+
+          // Double-check that this number doesn't already exist
+          let attempts = 0;
+          const maxAttempts = 100;
+          let foundAvailableNumber = false;
+          
+          while (attempts < maxAttempts) {
+            const existingBooking = await Booking.findOne({ 
+              $or: [
+                { outboundConfirmationNumber: nextNumber.toString() },
+                { returnConfirmationNumber: nextNumber.toString() }
+              ]
+            });
+            
+            if (!existingBooking) {
+              foundAvailableNumber = true;
+              break;
+            }
+            
+            nextNumber++;
+            attempts++;
+          }
+
+          if (foundAvailableNumber && nextNumber <= 99999) {
+            returnConfirmationNumber = nextNumber.toString();
+            console.log(`✅ Generated consecutive return confirmation number: ${returnConfirmationNumber}`);
+          } else {
+            // Fallback: use timestamp if we can't find a consecutive number
+            console.warn('⚠️ Could not find consecutive confirmation number, using timestamp fallback');
+            const timestamp = Date.now();
+            const random = Math.floor(Math.random() * 1000);
+            returnConfirmationNumber = `BK${timestamp}${random}R`;
+          }
+        } else {
+          console.log(`✅ Using provided return confirmation number: ${returnConfirmationNumber}`);
+        }
+        
+        // Create return booking data with swapped locations
+        const returnBookingData = {
+          customerId: savedBooking.customerId,
+          outboundConfirmationNumber: returnConfirmationNumber,
+          tripInfo: {
+            // Swap pickup and dropoff for return trip
+            pickup: savedBooking.tripInfo.dropoff,
+            dropoff: savedBooking.tripInfo.pickup,
+            // Use return date and time
+            date: savedBooking.tripInfo.returnDate,
+            pickupDate: savedBooking.tripInfo.returnDate,
+            pickupHour: savedBooking.tripInfo.returnHour,
+            pickupMinute: savedBooking.tripInfo.returnMinute,
+            pickupPeriod: savedBooking.tripInfo.returnPeriod,
+            pickupLocation: savedBooking.tripInfo.dropoffLocation || savedBooking.tripInfo.dropoff,
+            dropoffLocation: savedBooking.tripInfo.pickupLocation || savedBooking.tripInfo.pickup,
+            // Copy passenger and vehicle info
+            passengers: savedBooking.tripInfo.passengers,
+            checkedLuggage: savedBooking.tripInfo.checkedLuggage || 0,
+            carryOn: savedBooking.tripInfo.carryOn || 0,
+            infantSeats: savedBooking.tripInfo.infantSeats || 0,
+            toddlerSeats: savedBooking.tripInfo.toddlerSeats || 0,
+            boosterSeats: savedBooking.tripInfo.boosterSeats || 0,
+            flight: savedBooking.tripInfo.returnFlight || '',
+            // Return trip is NOT a roundtrip itself
+            roundTrip: false,
+            returnDate: '',
+            returnHour: '',
+            returnMinute: '',
+            returnPeriod: '',
+            returnFlight: '',
+            stops: [], // No stops for return trip by default
+            tripType: savedBooking.tripInfo.tripType || 'Point-to-point',
+            airportCode: savedBooking.tripInfo.airportCode,
+            terminalGate: savedBooking.tripInfo.terminalGate,
+            meetOption: savedBooking.tripInfo.meetOption
+          },
+          userData: savedBooking.userData,
+          paymentMethod: savedBooking.paymentMethod,
+          checkoutType: savedBooking.checkoutType,
+          isLoggedIn: savedBooking.isLoggedIn,
+          status: 'Pending',
+          // Calculate return trip price
+          // Use returnTripPrice from the original booking if available, with proportional payment discount
+          totalPrice: (() => {
+            let returnPrice = 0;
+            
+            // If returnTripPrice is explicitly stored, use it
+            if (savedBooking.returnTripPrice && savedBooking.returnTripPrice > 0) {
+              returnPrice = savedBooking.returnTripPrice;
+              
+              // Calculate proportional payment discount for return trip
+              const outboundSubtotal = (savedBooking.basePrice || 0) + 
+                                      (savedBooking.distancePrice || 0) + 
+                                      (savedBooking.stopsCharge || 0) + 
+                                      (savedBooking.childSeatsCharge || 0);
+              const totalSubtotal = outboundSubtotal + returnPrice;
+              
+              if (totalSubtotal > 0 && savedBooking.paymentDiscount) {
+                const returnProportion = returnPrice / totalSubtotal;
+                const returnDiscount = savedBooking.paymentDiscount * returnProportion;
+                returnPrice = returnPrice - returnDiscount;
+              }
+            } else {
+              // Fallback: estimate return price as base price with child seats (same as outbound)
+              returnPrice = (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0);
+              
+              // Apply payment discount proportionally if available
+              if (savedBooking.paymentDiscount) {
+                const outboundSubtotal = (savedBooking.basePrice || 0) + 
+                                        (savedBooking.distancePrice || 0) + 
+                                        (savedBooking.stopsCharge || 0) + 
+                                        (savedBooking.childSeatsCharge || 0);
+                const totalSubtotal = outboundSubtotal + returnPrice;
+                if (totalSubtotal > 0) {
+                  const returnProportion = returnPrice / totalSubtotal;
+                  const returnDiscount = savedBooking.paymentDiscount * returnProportion;
+                  returnPrice = returnPrice - returnDiscount;
+                }
+              }
+            }
+            return Math.round(returnPrice * 100) / 100;
+          })(),
+          calculatedPrice: (() => {
+            // Same calculation for calculatedPrice field (store as number)
+            let returnPrice = 0;
+            
+            if (savedBooking.returnTripPrice && savedBooking.returnTripPrice > 0) {
+              returnPrice = savedBooking.returnTripPrice;
+              
+              const outboundSubtotal = (savedBooking.basePrice || 0) + 
+                                      (savedBooking.distancePrice || 0) + 
+                                      (savedBooking.stopsCharge || 0) + 
+                                      (savedBooking.childSeatsCharge || 0);
+              const totalSubtotal = outboundSubtotal + returnPrice;
+              
+              if (totalSubtotal > 0 && savedBooking.paymentDiscount) {
+                const returnProportion = returnPrice / totalSubtotal;
+                const returnDiscount = savedBooking.paymentDiscount * returnProportion;
+                returnPrice = returnPrice - returnDiscount;
+              }
+            } else {
+              returnPrice = (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0);
+              
+              if (savedBooking.paymentDiscount) {
+                const outboundSubtotal = (savedBooking.basePrice || 0) + 
+                                        (savedBooking.distancePrice || 0) + 
+                                        (savedBooking.stopsCharge || 0) + 
+                                        (savedBooking.childSeatsCharge || 0);
+                const totalSubtotal = outboundSubtotal + returnPrice;
+                if (totalSubtotal > 0) {
+                  const returnProportion = returnPrice / totalSubtotal;
+                  const returnDiscount = savedBooking.paymentDiscount * returnProportion;
+                  returnPrice = returnPrice - returnDiscount;
+                }
+              }
+            }
+            return Math.round(returnPrice * 100) / 100;
+          })(),
+          bookingFee: savedBooking.bookingFee || 0,
+          childSeatsCharge: savedBooking.childSeatsCharge || 0,
+          discountPercentage: savedBooking.discountPercentage || 0,
+          discountFixed: savedBooking.discountFixed || 0,
+          roundTripDiscount: 0, // No discount for return trip itself
+          gratuityPercentage: savedBooking.gratuityPercentage || 0,
+          gratuityFixed: savedBooking.gratuityFixed || 0,
+          taxesPercentage: savedBooking.taxesPercentage || 0,
+          taxesFixed: savedBooking.taxesFixed || 0,
+          creditCardFeePercentage: savedBooking.creditCardFeePercentage || 0,
+          creditCardFeeFixed: savedBooking.creditCardFeeFixed || 0,
+          basePrice: savedBooking.basePrice || 0,
+          distancePrice: savedBooking.distancePrice || 0,
+          surgeMultiplier: savedBooking.surgeMultiplier || 1,
+          surgeName: savedBooking.surgeName || '',
+          stopsCharge: 0, // No stops for return trip
+          returnTripPrice: 0,
+          subtotal: (savedBooking.basePrice || 0) > 0 
+            ? (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0)
+            : (savedBooking.totalPrice || 0) * 0.5,
+          finalTotal: (savedBooking.basePrice || 0) > 0 
+            ? (savedBooking.basePrice || 0) + (savedBooking.childSeatsCharge || 0)
+            : (savedBooking.totalPrice || 0) * 0.5,
+          paymentDiscount: savedBooking.paymentDiscount || 0,
+          paymentDiscountDescription: savedBooking.paymentDiscountDescription || '',
+          areaName: savedBooking.areaName || '',
+          pricingMethod: savedBooking.pricingMethod || 'distance'
+        };
+        
+        // Create and save return booking
+        returnBooking = new Booking(returnBookingData);
+        const savedReturnBooking = await returnBooking.save();
+        
+        console.log(`✅ Return booking created successfully: ${savedReturnBooking.outboundConfirmationNumber}`);
+        
+        // Generate global variables for return booking
+        try {
+          await GlobalVariablesService.updateGlobalVariables((savedReturnBooking._id as any).toString());
+          console.log(`Global variables generated for return booking ${savedReturnBooking._id}`);
+        } catch (globalVarError) {
+          console.error('Error generating global variables for return booking:', globalVarError);
+        }
+        
+        // Update customer statistics to include return booking
+        if (savedBooking.customerId) {
+          try {
+            const customer = await Customer.findById(savedBooking.customerId);
+            if (customer) {
+              customer.totalBookings += 1;
+              customer.totalSpent += savedReturnBooking.totalPrice;
+              await customer.save();
+              console.log(`Updated customer statistics to include return booking`);
+            }
+          } catch (customerError) {
+            console.error('Error updating customer statistics for return booking:', customerError);
+          }
+        }
+        
+      } catch (returnBookingError) {
+        console.error('❌ Error creating return booking:', returnBookingError);
+        // Don't fail the entire request if return booking creation fails
+        // The outbound booking was already created successfully
+      }
+    }
+    
     // Generate global variables for the new booking
     try {
       await GlobalVariablesService.updateGlobalVariables((savedBooking._id as any).toString());
@@ -379,6 +698,16 @@ export const createBooking = async (req: Request, res: Response) => {
     }
     
     console.log('Booking created successfully:', savedBooking.outboundConfirmationNumber);
+    
+    // Return both bookings if return booking was created
+    if (returnBooking) {
+      return res.status(201).json({
+        outboundBooking: savedBooking,
+        returnBooking: returnBooking,
+        message: 'Roundtrip booking created successfully with both outbound and return trips'
+      });
+    }
+    
     return res.status(201).json(savedBooking);
   } catch (error) {
     console.error('Error creating booking:', error);

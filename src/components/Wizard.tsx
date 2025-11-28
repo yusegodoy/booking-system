@@ -1028,7 +1028,53 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
       checkoutType: checkoutType || 'guest',
       isLoggedIn: isLoggedIn || false,
       status: 'Pending',
-      totalPrice: calculatedPrice?.finalTotal || (() => {
+      // Include all pricing breakdown fields if available
+      ...(calculatedPrice && {
+        basePrice: calculatedPrice.basePrice || 0,
+        distancePrice: calculatedPrice.distancePrice || 0,
+        stopsCharge: calculatedPrice.stopsCharge || 0,
+        childSeatsCharge: calculatedPrice.childSeatsCharge || 0,
+        roundTripDiscount: calculatedPrice.roundTripDiscount || 0,
+        returnTripPrice: calculatedPrice.returnTripPrice || 0,
+        subtotal: calculatedPrice.subtotal || 0,
+        paymentDiscount: calculatedPrice.paymentDiscount || 0,
+        paymentDiscountDescription: calculatedPrice.paymentDiscountDescription || '',
+        areaName: calculatedPrice.areaName || '',
+        pricingMethod: calculatedPrice.pricingMethod || 'distance',
+        surgeMultiplier: calculatedPrice.surgeMultiplier || 1,
+        surgeName: calculatedPrice.surgeName || '',
+        calculatedPrice: calculatedPrice.finalTotal || 0 // Store finalTotal as calculatedPrice number
+      }),
+      totalPrice: (() => {
+        // Si hay precio calculado del backend
+        if (calculatedPrice) {
+          // Si es roundtrip, el precio de ida es el subtotal sin incluir returnTripPrice
+          if (tripInfo.roundTrip && calculatedPrice.returnTripPrice !== undefined) {
+            // Calcular precio de ida: basePrice + distancePrice + stopsCharge + childSeatsCharge
+            // Luego aplicar descuento proporcional
+            const outboundSubtotal = (calculatedPrice.basePrice || 0) + 
+                                    (calculatedPrice.distancePrice || 0) + 
+                                    (calculatedPrice.stopsCharge || 0) + 
+                                    (calculatedPrice.childSeatsCharge || 0);
+            
+            // Calcular el subtotal total (ida + vuelta) para calcular proporción del descuento
+            const totalSubtotal = outboundSubtotal + (calculatedPrice.returnTripPrice || 0);
+            
+            // Aplicar descuento proporcional solo a la ida
+            let outboundPrice = outboundSubtotal;
+            if (calculatedPrice.paymentDiscount && totalSubtotal > 0) {
+              const outboundProportion = outboundSubtotal / totalSubtotal;
+              const outboundDiscount = calculatedPrice.paymentDiscount * outboundProportion;
+              outboundPrice = outboundSubtotal - outboundDiscount;
+            }
+            
+            return Math.round(outboundPrice * 100) / 100;
+          } else {
+            // No es roundtrip, usar finalTotal directamente
+            return calculatedPrice.finalTotal || 0;
+          }
+        }
+        
         // Fallback al cálculo anterior si no hay precio calculado del backend
         const selectedVehiclePrice = tripInfo.vehicleType ? vehiclePrices[tripInfo.vehicleType] : null;
         const basePrice = selectedVehiclePrice || 55;
@@ -1036,8 +1082,8 @@ const Wizard: React.FC<WizardProps> = ({ onOpenDashboard, onOpenLoginModal, wiza
         const childSeatsCharge = childSeatsCount * 5;
         
         if (tripInfo.roundTrip) {
-          const returnPrice = basePrice * 0.95;
-          const baseTotal = basePrice + returnPrice + childSeatsCharge;
+          // Para roundtrip, solo devolver precio de ida (sin incluir vuelta)
+          const baseTotal = basePrice + childSeatsCharge;
           const totalDiscount = paymentMethod === 'cash' ? baseTotal * 0.035 + 0.15 : 0;
           return baseTotal - totalDiscount;
         } else {
