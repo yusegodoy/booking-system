@@ -31,6 +31,10 @@ export class GoogleCalendarService {
         throw new Error('Google Calendar not configured in database');
       }
 
+      if (!config.refreshToken) {
+        throw new Error('Google Calendar refresh token not found. Please reconnect your Google Calendar account.');
+      }
+
       console.log('🔧 Initializing Google Calendar service with credentials');
       console.log('   - Client ID:', process.env.GOOGLE_CLIENT_ID ? '✅ Present' : '❌ Missing');
       console.log('   - Client Secret:', process.env.GOOGLE_CLIENT_SECRET ? '✅ Present' : '❌ Missing');
@@ -43,6 +47,23 @@ export class GoogleCalendarService {
         access_token: config.accessToken,
         expiry_date: config.tokenExpiry?.getTime()
       } as any);
+
+      // Set up automatic token refresh handler
+      this.oauth2Client.on('tokens', async (tokens) => {
+        if (tokens.refresh_token) {
+          // Update refresh token if provided
+          config.refreshToken = tokens.refresh_token;
+        }
+        if (tokens.access_token) {
+          // Update access token and expiry
+          config.accessToken = tokens.access_token;
+          if (tokens.expiry_date) {
+            config.tokenExpiry = new Date(tokens.expiry_date);
+          }
+          await config.save();
+          console.log('✅ Google Calendar tokens refreshed and saved');
+        }
+      });
 
       this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
       console.log('✅ Google Calendar service initialized successfully');
@@ -73,12 +94,26 @@ export class GoogleCalendarService {
       }
 
       if (!this.calendar) {
-        await this.initialize();
+        const initialized = await this.initialize();
+        if (!initialized) {
+          throw new Error('Failed to initialize Google Calendar service');
+        }
       }
 
       const config = await GoogleCalendarConfig.findOne({ isEnabled: true });
       if (!config) {
         throw new Error('Google Calendar not configured');
+      }
+
+      // Check if we need to refresh tokens
+      if (config.tokenExpiry && config.tokenExpiry < new Date()) {
+        console.log('🔄 Access token expired, refreshing...');
+        try {
+          await this.oauth2Client.getAccessToken();
+        } catch (refreshError: any) {
+          console.error('❌ Failed to refresh access token:', refreshError);
+          throw new Error('Failed to refresh access token. Please reconnect your Google Calendar account.');
+        }
       }
 
       // Prepare event data
@@ -117,16 +152,22 @@ export class GoogleCalendarService {
 
       return { success: true, eventId };
     } catch (error: any) {
-      const errorMessage = error.message || 'Unknown error';
-      console.error(`❌ Failed to sync booking ${confirmationNumber} (${bookingId}) to Google Calendar:`, errorMessage);
-      console.error(`   Error details:`, error);
+      console.error(`❌ Failed to sync booking ${confirmationNumber} (${bookingId}) to Google Calendar:`, error);
       
-             // Update booking with error status
-       await Booking.findByIdAndUpdate((booking._id as any), {
-         googleCalendarSyncStatus: 'error',
-         googleCalendarLastSync: new Date(),
-         googleCalendarError: errorMessage
-       });
+      // Check if it's an authentication error
+      let errorMessage = error.message || 'Unknown error';
+      if (error.code === 401 || error.message?.includes('invalid_grant') || error.message?.includes('Token has been expired')) {
+        errorMessage = 'Authentication failed. Please reconnect your Google Calendar account.';
+      } else if (error.code === 403) {
+        errorMessage = 'Access denied. Please check Google Calendar permissions.';
+      }
+      
+      // Update booking with error status
+      await Booking.findByIdAndUpdate((booking._id as any), {
+        googleCalendarSyncStatus: 'error',
+        googleCalendarLastSync: new Date(),
+        googleCalendarError: errorMessage
+      });
 
       return { success: false, error: errorMessage };
     }
@@ -491,14 +532,41 @@ export class GoogleCalendarService {
   async getAvailableCalendars(): Promise<{ success: boolean; calendars?: any[]; error?: string }> {
     try {
       if (!this.calendar) {
-        await this.initialize();
+        const initialized = await this.initialize();
+        if (!initialized) {
+          return { success: false, error: 'Failed to initialize Google Calendar service' };
+        }
+      }
+
+      // Check if we need to refresh tokens
+      const config = await GoogleCalendarConfig.findOne({ isEnabled: true });
+      if (config && config.tokenExpiry && config.tokenExpiry < new Date()) {
+        console.log('🔄 Access token expired, refreshing...');
+        // Force token refresh by making a request
+        // The OAuth2Client will automatically refresh if refresh_token is set
+        try {
+          await this.oauth2Client.getAccessToken();
+        } catch (refreshError: any) {
+          console.error('❌ Failed to refresh access token:', refreshError);
+          return { success: false, error: 'Failed to refresh access token. Please reconnect your Google Calendar account.' };
+        }
       }
 
       const response = await this.calendar.calendarList.list();
-      return { success: true, calendars: response.data.items };
+      return { success: true, calendars: response.data.items || [] };
     } catch (error: any) {
-      console.error('Failed to get available calendars:', error);
-      return { success: false, error: error.message };
+      console.error('❌ Failed to get available calendars:', error);
+      
+      // Check if it's an authentication error
+      if (error.code === 401 || error.message?.includes('invalid_grant') || error.message?.includes('Token has been expired')) {
+        return { success: false, error: 'Authentication failed. Please reconnect your Google Calendar account.' };
+      }
+      
+      if (error.code === 403) {
+        return { success: false, error: 'Access denied. Please check Google Calendar permissions.' };
+      }
+
+      return { success: false, error: error.message || 'Failed to get available calendars' };
     }
   }
 
