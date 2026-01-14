@@ -51,12 +51,32 @@ const GoogleCalendarManager: React.FC = () => {
     syncInterval: 15
   });
 
+  // Flags to prevent multiple simultaneous calls
+  const loadingCalendarsRef = React.useRef(false);
+  const authWindowRef = React.useRef<Window | null>(null);
+  const intervalsRef = React.useRef<NodeJS.Timeout[]>([]);
+
   const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
 
   useEffect(() => {
     loadConfig();
-    loadCalendars();
+    // Only load calendars after config is loaded and has valid tokens
+    // This will be handled by a separate effect that watches config
+    
+    // Cleanup intervals on unmount
+    return () => {
+      intervalsRef.current.forEach(interval => clearInterval(interval));
+      intervalsRef.current = [];
+    };
   }, []);
+
+  // Load calendars when config changes and has valid tokens
+  useEffect(() => {
+    if (config?.hasValidTokens && !loadingCalendarsRef.current) {
+      loadCalendars();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config?.hasValidTokens]);
 
   const loadConfig = async () => {
     try {
@@ -72,19 +92,45 @@ const GoogleCalendarManager: React.FC = () => {
   };
 
   const loadCalendars = async () => {
+    // Prevent multiple simultaneous calls
+    if (loadingCalendarsRef.current) {
+      return;
+    }
+
+    // Only try to load calendars if we have valid tokens
+    if (config && !config.hasValidTokens) {
+      return;
+    }
+
     try {
+      loadingCalendarsRef.current = true;
       const response = await axios.get<ApiResponse>(`${API_BASE_URL}/google-calendar/calendars`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCalendars(response.data.calendars || []);
-    } catch (error) {
-      // Silently fail - calendars will be loaded after authentication
+    } catch (error: any) {
+      // Only show error if it's not a 400 (which means token expired/invalid)
+      // In that case, we'll wait for user to reconnect
+      if (error.response?.status === 400) {
+        // Token expired or invalid - don't spam errors
+        console.log('⚠️ Cannot load calendars: authentication required');
+      } else if (error.response?.status !== 401) {
+        // Other errors can be silently ignored
+        console.log('⚠️ Failed to load calendars:', error.response?.status);
+      }
+    } finally {
+      loadingCalendarsRef.current = false;
     }
   };
 
   const handleAuth = async () => {
     try {
       setLoading(true);
+      
+      // Clear any existing intervals
+      intervalsRef.current.forEach(interval => clearInterval(interval));
+      intervalsRef.current = [];
+      
       const response = await axios.get<ApiResponse>(`${API_BASE_URL}/google-calendar/auth/url`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -96,22 +142,31 @@ const GoogleCalendarManager: React.FC = () => {
           'Google Calendar Auth',
           'width=500,height=600'
         );
+        
+        authWindowRef.current = authWindow;
 
-        // Poll for window close and also check periodically
+        // Poll for window close with proper error handling
         const checkClosed = setInterval(() => {
-          if (authWindow?.closed) {
-            clearInterval(checkClosed);
-            // Wait a bit for the backend to process the callback
-            setTimeout(() => {
-              loadConfig();
-              loadCalendars();
-              setLoading(false);
-              setMessage({ type: 'success', text: 'Google Calendar authentication completed! Please check the connection status.' });
-            }, 2000);
+          try {
+            if (authWindow?.closed) {
+              clearInterval(checkClosed);
+              intervalsRef.current = intervalsRef.current.filter(i => i !== checkClosed);
+              // Wait a bit for the backend to process the callback
+              setTimeout(() => {
+                loadConfig();
+                loadCalendars();
+                setLoading(false);
+                setMessage({ type: 'success', text: 'Google Calendar authentication completed! Please check the connection status.' });
+              }, 2000);
+            }
+          } catch (error) {
+            // window.closed can throw due to COOP policy - ignore it
+            // We'll rely on the callback check instead
           }
         }, 1000);
+        intervalsRef.current.push(checkClosed);
 
-        // Also check the callback URL every 2 seconds
+        // Check the callback URL every 2 seconds
         const checkCallback = setInterval(async () => {
           try {
             const response = await axios.get(`${API_BASE_URL}/google-calendar/config`, {
@@ -119,9 +174,16 @@ const GoogleCalendarManager: React.FC = () => {
             });
             
             if ((response.data as ApiResponse).config?.hasValidTokens) {
-              clearInterval(checkCallback);
-              clearInterval(checkClosed);
-              authWindow?.close();
+              // Clear all intervals
+              intervalsRef.current.forEach(interval => clearInterval(interval));
+              intervalsRef.current = [];
+              
+              try {
+                authWindow?.close();
+              } catch (error) {
+                // Ignore errors closing window
+              }
+              
               loadConfig();
               loadCalendars();
               setLoading(false);
@@ -131,22 +193,13 @@ const GoogleCalendarManager: React.FC = () => {
             // Ignore errors during polling
           }
         }, 2000);
+        intervalsRef.current.push(checkCallback);
 
         // Clear callback check after 60 seconds
         setTimeout(() => {
           clearInterval(checkCallback);
+          intervalsRef.current = intervalsRef.current.filter(i => i !== checkCallback);
         }, 60000);
-
-        // Also check every 5 seconds in case window doesn't close properly
-        const periodicCheck = setInterval(() => {
-          loadConfig();
-          loadCalendars();
-        }, 5000);
-
-        // Clear periodic check after 30 seconds
-        setTimeout(() => {
-          clearInterval(periodicCheck);
-        }, 30000);
 
       } else {
         setLoading(false);
@@ -357,7 +410,14 @@ const GoogleCalendarManager: React.FC = () => {
                 {loading ? 'Testing...' : 'Test Connection'}
               </button>
               <button 
-                onClick={() => { loadConfig(); loadCalendars(); setMessage({ type: 'success', text: 'Configuration refreshed!' }); }} 
+                onClick={() => { 
+                  loadConfig(); 
+                  // Only load calendars if we have valid tokens
+                  if (config?.hasValidTokens) {
+                    loadCalendars(); 
+                  }
+                  setMessage({ type: 'success', text: 'Configuration refreshed!' }); 
+                }} 
                 className="btn-secondary"
               >
                 🔄 Refresh Status

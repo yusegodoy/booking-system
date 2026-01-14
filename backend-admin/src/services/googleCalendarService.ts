@@ -116,13 +116,57 @@ export class GoogleCalendarService {
         throw new Error('Google Calendar not configured');
       }
 
-      // Check if we need to refresh tokens
-      if (config.tokenExpiry && config.tokenExpiry < new Date()) {
-        console.log('🔄 Access token expired, refreshing...');
+      // Check if we need to refresh tokens (refresh 5 minutes before expiry to be safe)
+      const now = new Date();
+      const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+      
+      if (config.tokenExpiry && config.tokenExpiry < fiveMinutesFromNow) {
+        console.log('🔄 Access token expired or expiring soon, refreshing...');
         try {
-          await this.oauth2Client.getAccessToken();
+          // Ensure credentials are set before refreshing
+          this.oauth2Client.setCredentials({
+            client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+            client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+            refresh_token: config.refreshToken,
+            access_token: config.accessToken,
+            expiry_date: config.tokenExpiry?.getTime()
+          } as any);
+          
+          const tokenResponse = await this.oauth2Client.getAccessToken();
+          if (tokenResponse.token) {
+            // Update config with new token
+            config.accessToken = tokenResponse.token;
+            if (tokenResponse.res?.data?.expiry_date) {
+              config.tokenExpiry = new Date(tokenResponse.res.data.expiry_date);
+            } else {
+              // If no expiry date provided, assume 1 hour from now
+              config.tokenExpiry = new Date(now.getTime() + 60 * 60 * 1000);
+            }
+            await config.save();
+            
+            // Update oauth2Client with new token
+            this.oauth2Client.setCredentials({
+              client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+              client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+              refresh_token: config.refreshToken,
+              access_token: config.accessToken,
+              expiry_date: config.tokenExpiry?.getTime()
+            } as any);
+            
+            console.log('✅ Access token refreshed successfully');
+          }
         } catch (refreshError: any) {
           console.error('❌ Failed to refresh access token:', refreshError);
+          // If refresh fails, it might be because the refresh token is invalid
+          if (refreshError.message?.includes('invalid_grant') || 
+              refreshError.message?.includes('Token has been expired') ||
+              refreshError.message?.includes('invalid_token')) {
+            // Clear invalid tokens
+            config.accessToken = undefined;
+            config.tokenExpiry = undefined;
+            await config.save();
+            throw new Error('Authentication expired. Please reconnect your Google Calendar account.');
+          }
           throw new Error('Failed to refresh access token. Please reconnect your Google Calendar account.');
         }
       }
@@ -560,24 +604,56 @@ export class GoogleCalendarService {
         }
       }
 
-      // Check if we need to refresh tokens
-      if (config.tokenExpiry && config.tokenExpiry < new Date()) {
-        console.log('🔄 Access token expired, refreshing...');
+      // Check if we need to refresh tokens (refresh 5 minutes before expiry to be safe)
+      const now = new Date();
+      const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+      
+      if (config.tokenExpiry && config.tokenExpiry < fiveMinutesFromNow) {
+        console.log('🔄 Access token expired or expiring soon, refreshing...');
         try {
+          // Ensure credentials are set before refreshing
+          this.oauth2Client.setCredentials({
+            client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+            client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+            refresh_token: config.refreshToken,
+            access_token: config.accessToken,
+            expiry_date: config.tokenExpiry?.getTime()
+          } as any);
+          
           const tokenResponse = await this.oauth2Client.getAccessToken();
           if (tokenResponse.token) {
             // Update config with new token
             config.accessToken = tokenResponse.token;
             if (tokenResponse.res?.data?.expiry_date) {
               config.tokenExpiry = new Date(tokenResponse.res.data.expiry_date);
+            } else {
+              // If no expiry date provided, assume 1 hour from now
+              config.tokenExpiry = new Date(now.getTime() + 60 * 60 * 1000);
             }
             await config.save();
+            
+            // Update oauth2Client with new token
+            this.oauth2Client.setCredentials({
+              client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+              client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+              refresh_token: config.refreshToken,
+              access_token: config.accessToken,
+              expiry_date: config.tokenExpiry?.getTime()
+            } as any);
+            
             console.log('✅ Access token refreshed successfully');
           }
         } catch (refreshError: any) {
           console.error('❌ Failed to refresh access token:', refreshError);
+          console.error('   Error details:', refreshError.message);
           // If refresh fails, it might be because the refresh token is invalid
-          if (refreshError.message?.includes('invalid_grant') || refreshError.message?.includes('Token has been expired')) {
+          if (refreshError.message?.includes('invalid_grant') || 
+              refreshError.message?.includes('Token has been expired') ||
+              refreshError.message?.includes('invalid_token')) {
+            // Clear invalid tokens
+            config.accessToken = undefined;
+            config.tokenExpiry = undefined;
+            await config.save();
             return { success: false, error: 'Authentication expired. Please reconnect your Google Calendar account.' };
           }
           return { success: false, error: 'Failed to refresh access token. Please reconnect your Google Calendar account.' };
@@ -603,11 +679,23 @@ export class GoogleCalendarService {
         if ((listError.code === 400 || listError.code === 401) && config) {
           console.log('🔄 Got 400/401 error, attempting to refresh token and retry...');
           try {
+            // Ensure credentials are set
+            this.oauth2Client.setCredentials({
+              client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+              client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+              refresh_token: config.refreshToken,
+              access_token: config.accessToken,
+              expiry_date: config.tokenExpiry?.getTime()
+            } as any);
+            
             const tokenResponse = await this.oauth2Client.getAccessToken();
             if (tokenResponse.token) {
               config.accessToken = tokenResponse.token;
               if (tokenResponse.res?.data?.expiry_date) {
                 config.tokenExpiry = new Date(tokenResponse.res.data.expiry_date);
+              } else {
+                // If no expiry date provided, assume 1 hour from now
+                config.tokenExpiry = new Date(new Date().getTime() + 60 * 60 * 1000);
               }
               await config.save();
               
@@ -630,6 +718,14 @@ export class GoogleCalendarService {
             }
           } catch (retryError: any) {
             console.error('❌ Failed to refresh and retry:', retryError);
+            // If refresh token is invalid, clear tokens
+            if (retryError.message?.includes('invalid_grant') || 
+                retryError.message?.includes('Token has been expired') ||
+                retryError.message?.includes('invalid_token')) {
+              config.accessToken = undefined;
+              config.tokenExpiry = undefined;
+              await config.save();
+            }
             throw retryError; // Re-throw to be handled by outer catch
           }
         }
