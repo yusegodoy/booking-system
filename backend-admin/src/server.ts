@@ -20,6 +20,7 @@ import uploadRoutes from './routes/uploadRoutes';
 import globalVariablesRoutes from './routes/globalVariablesRoutes';
 import driverRoutes from './routes/driverRoutes';
 import googleCalendarRoutes from './routes/googleCalendarRoutes';
+import googleCalendarService from './services/googleCalendarService';
 import emailRoutes from './routes/emailRoutes';
 import serviceAgreementRoutes from './routes/serviceAgreementRoutes';
 import companyInfoRoutes from './routes/companyInfoRoutes';
@@ -129,4 +130,23 @@ app.listen(PORT, async () => {
   } catch (error) {
     console.log('Resend email service initialization failed:', error);
   }
+
+  // Set up periodic token refresh for Google Calendar (every 30 minutes)
+  // This ensures tokens are refreshed even when there's no activity
+  setInterval(async () => {
+    try {
+      await googleCalendarService.refreshTokenIfNeeded();
+    } catch (error) {
+      console.error('Error in periodic Google Calendar token refresh:', error);
+    }
+  }, 30 * 60 * 1000); // 30 minutes
+
+  // Also run once immediately after server starts (with a 1 minute delay to let DB connect)
+  setTimeout(async () => {
+    try {
+      await googleCalendarService.refreshTokenIfNeeded();
+    } catch (error) {
+      console.error('Error in initial Google Calendar token refresh:', error);
+    }
+  }, 60 * 1000); // 1 minute delay
 }); 

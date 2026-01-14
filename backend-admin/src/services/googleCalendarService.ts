@@ -787,6 +787,87 @@ export class GoogleCalendarService {
       return { success: false, error: error.message };
     }
   }
+
+  // Refresh token proactively if needed (called by periodic job)
+  async refreshTokenIfNeeded(): Promise<{ success: boolean; refreshed?: boolean; error?: string }> {
+    try {
+      const config = await GoogleCalendarConfig.findOne({ isEnabled: true });
+      if (!config || !config.refreshToken) {
+        return { success: true, refreshed: false }; // Not configured, nothing to do
+      }
+
+      // Check if we need to refresh tokens (refresh 10 minutes before expiry to be safe)
+      const now = new Date();
+      const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
+      
+      if (config.tokenExpiry && config.tokenExpiry < tenMinutesFromNow) {
+        console.log('🔄 Periodic job: Access token expiring soon, refreshing proactively...');
+        
+        // Initialize if needed
+        if (!this.calendar) {
+          const initialized = await this.initialize();
+          if (!initialized) {
+            return { success: false, error: 'Failed to initialize service' };
+          }
+        }
+
+        // Ensure credentials are set
+        this.oauth2Client.setCredentials({
+          client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+          client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+          refresh_token: config.refreshToken,
+          access_token: config.accessToken,
+          expiry_date: config.tokenExpiry?.getTime()
+        } as any);
+
+        try {
+          const tokenResponse = await this.oauth2Client.getAccessToken();
+          if (tokenResponse.token) {
+            // Update config with new token
+            config.accessToken = tokenResponse.token;
+            if (tokenResponse.res?.data?.expiry_date) {
+              config.tokenExpiry = new Date(tokenResponse.res.data.expiry_date);
+            } else {
+              // If no expiry date provided, assume 1 hour from now
+              config.tokenExpiry = new Date(now.getTime() + 60 * 60 * 1000);
+            }
+            await config.save();
+            
+            // Update oauth2Client with new token
+            this.oauth2Client.setCredentials({
+              client_id: config.clientId || process.env.GOOGLE_CLIENT_ID,
+              client_secret: config.clientSecret || process.env.GOOGLE_CLIENT_SECRET,
+              refresh_token: config.refreshToken,
+              access_token: config.accessToken,
+              expiry_date: config.tokenExpiry?.getTime()
+            } as any);
+            
+            console.log('✅ Periodic job: Token refreshed successfully');
+            return { success: true, refreshed: true };
+          }
+        } catch (refreshError: any) {
+          console.error('❌ Periodic job: Failed to refresh token:', refreshError);
+          // If refresh fails, it might be because the refresh token is invalid
+          if (refreshError.message?.includes('invalid_grant') || 
+              refreshError.message?.includes('Token has been expired') ||
+              refreshError.message?.includes('invalid_token')) {
+            // Clear invalid tokens
+            config.accessToken = undefined;
+            config.tokenExpiry = undefined;
+            config.errorMessage = 'Token refresh failed. Please reconnect your Google Calendar account.';
+            await config.save();
+            return { success: false, error: 'Refresh token invalid. Please reconnect your Google Calendar account.' };
+          }
+          return { success: false, error: refreshError.message || 'Failed to refresh token' };
+        }
+      }
+
+      return { success: true, refreshed: false }; // Token still valid, no refresh needed
+    } catch (error: any) {
+      console.error('❌ Periodic job: Error checking token:', error);
+      return { success: false, error: error.message || 'Unknown error' };
+    }
+  }
 }
 
 export default new GoogleCalendarService();
